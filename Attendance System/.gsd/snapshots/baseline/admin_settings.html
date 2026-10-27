@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Engine Settings | GeoFace Admin</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap 5 CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=5">
+    <style>
+        :root {
+            --admin-primary: #4f46e5;
+            --admin-primary-hover: #4338ca;
+            --admin-accent: #6366f1;
+            --admin-sidebar-bg: #0f172a;
+            --admin-sidebar-border: #1e293b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .admin-sidebar {
+            width: 270px;
+            background: var(--admin-sidebar-bg);
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--admin-sidebar-border);
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1040;
+            transition: transform 0.3s ease;
+        }
+
+        .admin-sidebar .sidebar-logo {
+            padding: 22px 20px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .admin-sidebar-nav {
+            padding: 14px 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 14px;
+            color: #94a3b8;
+            font-size: 0.86rem;
+            font-weight: 500;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            margin-bottom: 3px;
+        }
+
+        .admin-nav-item:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .admin-nav-item.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+            font-weight: 600;
+        }
+
+        .admin-nav-item i {
+            font-size: 1.05rem;
+        }
+
+        .nav-category {
+            font-size: 0.70rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            font-weight: 700;
+            padding: 14px 12px 6px;
+        }
+
+        .admin-main {
+            margin-left: 270px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-topbar {
+            height: 64px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .admin-content {
+            padding: 28px;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 991.98px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+        }
+
+        .badge-verified {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+
+        .badge-flagged {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+    </style>
+    
+</head>
+
+<body>
+
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-logo d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div
+                    style="width: 38px; height: 38px; background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.15rem; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <div>
+                    <div class="fw-bold text-white fs-6 lh-1">GeoFace HR</div>
+                    <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Enterprise Governance</div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-dark d-lg-none border-0 text-white" id="closeSidebarBtn">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <nav class="admin-sidebar-nav">
+            <div class="nav-category">Main Overview</div>
+            <a href="/admin/dashboard"
+                class="admin-nav-item ">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a href="/admin/attendance"
+                class="admin-nav-item ">
+                <i class="bi bi-clipboard2-data"></i> All Attendance
+            </a>
+            <a href="/admin/flagged" class="admin-nav-item ">
+                <i class="bi bi-shield-exclamation"></i> Flagged & Audit Queue
+            </a>
+
+            <div class="nav-category mt-2">Workforce & Operations</div>
+            <a href="/admin/sites" class="admin-nav-item ">
+                <i class="bi bi-geo-alt"></i> Sites & Geofencing
+            </a>
+            <a href="/admin/shifts" class="admin-nav-item ">
+                <i class="bi bi-clock-history"></i> Shifts & Hours
+            </a>
+            <a href="/admin/employees"
+                class="admin-nav-item ">
+                <i class="bi bi-people"></i> Employee Roster
+            </a>
+            <a href="/admin/enroll" class="admin-nav-item ">
+                <i class="bi bi-person-bounding-box"></i> Enroll Face (Consent)
+            </a>
+
+            <div class="nav-category mt-2">Payroll & Governance</div>
+            <a href="/admin/payroll-export"
+                class="admin-nav-item ">
+                <i class="bi bi-cash-stack"></i> Payroll CSV Export
+            </a>
+            <a href="/admin/audit-logs"
+                class="admin-nav-item ">
+                <i class="bi bi-journal-text"></i> Audit Trail
+            </a>
+            <a href="/admin/settings"
+                class="admin-nav-item active">
+                <i class="bi bi-sliders2"></i> Engine Settings
+            </a>
+        </nav>
+
+        <div class="p-3" style="border-top: 1px solid #1e293b; background: rgba(0,0,0,0.15);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary rounded-circle" style="width: 8px; height: 8px;"></div>
+                    <span class="small text-light fw-medium">System Administrator</span>
+                </div>
+                <a href="/admin/logout" class="text-danger text-decoration-none small fw-semibold"
+                    title="Sign out admin">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-light border d-lg-none" id="openSidebarBtn">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small">GeoFace Enterprise</span>
+                    <span class="text-muted small">/</span>
+                    <span class="fw-semibold text-dark small">Administrative Console</span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-light text-secondary border px-3 py-2">
+                    <i class="bi bi-hdd-network text-success me-1"></i> Multi-Site Mode: Active
+                </span>
+                <a href="/employee/check-in-out" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                    title="Test employee check-in view">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Employee Portal
+                </a>
+            </div>
+        </header>
+
+        <!-- Flash Notification Banners -->
+        <div class="px-4 pt-3">
+            
+            
+            
+        </div>
+
+        <div class="admin-content">
+            
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h4 class="fw-bold mb-1 text-dark">Biometric Engine & Security Settings</h4>
+        <p class="text-muted small mb-0">Tune facial embedding distance thresholds, spoof sensitivity, and attendance method policies</p>
+    </div>
+</div>
+
+<!-- Toast Container for Interactive Action Feedback -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+    <div id="policyToast" class="toast align-items-center text-white bg-success border-0 shadow-lg rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2 py-3 px-3">
+                <i class="bi bi-check-circle-fill fs-5"></i>
+                <div>
+                    <strong class="d-block">Policy Updated Successfully</strong>
+                    <span id="toastMsg" class="small">Changes take effect immediately for all upcoming employee check-ins.</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- SECTION 1: ATTENDANCE METHOD POLICY (NEW) -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2 border-bottom pb-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-shield-lock-fill fs-5"></i>
+                        </span>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Attendance Method Policy</h5>
+                            <span class="text-muted small">Control which attendance modes are available to staff globally and configure per-site overrides</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button type="button" id="savePolicyBtn" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" style="background: var(--admin-primary); border-color: var(--admin-primary);">
+                        <i class="bi bi-save me-1"></i> Save Policy Changes
+                    </button>
+                </div>
+            </div>
+
+            <form id="attendancePolicyForm" method="POST" action="/admin/settings">
+                <!-- Part A: Global Default Policy -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-uppercase text-secondary mb-2" style="letter-spacing: 0.05em;">
+                        1. Company-Wide Global Policy (Default for all sites)
+                    </label>
+                    <p class="text-muted small mb-3">
+                        Sets the baseline policy across the entire workforce. Sites set to <em>"Inherit Global Default"</em> automatically follow this rule.
+                    </p>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="card h-100 p-3 rounded-4 border-2 transition-all cursor-pointer policy-card border-light-subtle bg-light" id="card_face_only">
+                                <div class="d-flex align-items-start gap-2">
+                                    <input class="form-check-input mt-1 global-policy-radio" type="radio" name="global_attendance_policy" id="global_face_only" value="face_only" >
+                                    <div>
+                                        <div class="fw-bold text-dark mb-1">
+                                            <i class="bi bi-camera-video-fill text-primary me-1"></i> Face Recognition Only
+                                        </div>
+                                        <span class="text-muted small d-block">
+                                            Mandates live camera scan & biometric liveness for all check-ins. Manual attendance is completely blocked.
+                                        </span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="card h-100 p-3 rounded-4 border-2 transition-all cursor-pointer policy-card border-light-subtle bg-light" id="card_manual_only">
+                                <div class="d-flex align-items-start gap-2">
+                                    <input class="form-check-input mt-1 global-policy-radio" type="radio" name="global_attendance_policy" id="global_manual_only" value="manual_only" >
+                                    <div>
+                                        <div class="fw-bold text-dark mb-1">
+                                            <i class="bi bi-pencil-square text-success me-1"></i> Manual Attendance Only
+                                        </div>
+                                        <span class="text-muted small d-block">
+                                            Authenticated via active login session without camera/face scanning. Facial biometric flow is bypassed.
+                                        </span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="card h-100 p-3 rounded-4 border-2 transition-all cursor-pointer policy-card border-info bg-info bg-opacity-10" id="card_both">
+                                <div class="d-flex align-items-start gap-2">
+                                    <input class="form-check-input mt-1 global-policy-radio" type="radio" name="global_attendance_policy" id="global_both" value="both" checked>
+                                    <div>
+                                        <div class="fw-bold text-dark mb-1">
+                                            <i class="bi bi-toggles text-info me-1"></i> Both (Employee Choice)
+                                        </div>
+                                        <span class="text-muted small d-block">
+                                            Allows staff to freely choose between Face Recognition and Manual Attendance on the Employee Portal.
+                                        </span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part B: Per-Site Override Table -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label small fw-bold text-uppercase text-secondary mb-0" style="letter-spacing: 0.05em;">
+                            2. Per-Site Override Configuration
+                        </label>
+                        <span class="badge bg-light text-secondary border">5 registered sites</span>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        Optionally override the global policy for specific physical work sites (e.g. Headquarters requiring face recognition while remote hubs allow manual check-ins).
+                    </p>
+
+                    <div class="table-responsive rounded-4 border overflow-hidden">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                            <thead class="table-light text-secondary">
+                                <tr>
+                                    <th class="ps-3 py-3" style="width: 32%;">Work Site Name & Address</th>
+                                    <th class="py-3" style="width: 14%;">Active Workforce</th>
+                                    <th class="py-3" style="width: 30%;">Site Policy Override</th>
+                                    <th class="py-3 text-end pe-3" style="width: 24%;">Effective Applied Policy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                    
+                                    <tr data-site-id="1">
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">Tech Park Headquarters (Mumbai)</div>
+                                            <div class="text-muted small text-truncate" style="max-width: 320px;">Bandra Kurla Complex, Bandra East, Mumbai, Maharashtra 400051</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-people-fill text-secondary me-1"></i>28 staff
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <select name="site_policy_1" class="form-select form-select-sm rounded-3 site-policy-select" data-site-id="1">
+                                                <option value="inherit" selected>
+                                                    Inherit Global Default (Both)
+                                                </option>
+                                                <option value="face_only" >
+                                                    Face Recognition Only
+                                                </option>
+                                                <option value="manual_only" >
+                                                    Manual Attendance Only
+                                                </option>
+                                                <option value="both" >
+                                                    Both (Employee Choice)
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <span id="effective_badge_1" class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                                
+                                                    <i class="bi bi-toggles me-1"></i>Both Allowed
+                                                
+                                                
+                                                    <span class="text-muted ms-1 fw-normal">(Inherited)</span>
+                                                
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr data-site-id="2">
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">Bengaluru Tech Hub</div>
+                                            <div class="text-muted small text-truncate" style="max-width: 320px;">Electronic City Phase 1, Bengaluru, Karnataka 560100</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-people-fill text-secondary me-1"></i>1 staff
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <select name="site_policy_2" class="form-select form-select-sm rounded-3 site-policy-select" data-site-id="2">
+                                                <option value="inherit" selected>
+                                                    Inherit Global Default (Both)
+                                                </option>
+                                                <option value="face_only" >
+                                                    Face Recognition Only
+                                                </option>
+                                                <option value="manual_only" >
+                                                    Manual Attendance Only
+                                                </option>
+                                                <option value="both" >
+                                                    Both (Employee Choice)
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <span id="effective_badge_2" class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                                
+                                                    <i class="bi bi-toggles me-1"></i>Both Allowed
+                                                
+                                                
+                                                    <span class="text-muted ms-1 fw-normal">(Inherited)</span>
+                                                
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr data-site-id="3">
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">Remote / Field Operations (No Geofence)</div>
+                                            <div class="text-muted small text-truncate" style="max-width: 320px;">Pan-India Field Staff / Sales Operations</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-people-fill text-secondary me-1"></i>0 staff
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <select name="site_policy_3" class="form-select form-select-sm rounded-3 site-policy-select" data-site-id="3">
+                                                <option value="inherit" selected>
+                                                    Inherit Global Default (Both)
+                                                </option>
+                                                <option value="face_only" >
+                                                    Face Recognition Only
+                                                </option>
+                                                <option value="manual_only" >
+                                                    Manual Attendance Only
+                                                </option>
+                                                <option value="both" >
+                                                    Both (Employee Choice)
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <span id="effective_badge_3" class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                                
+                                                    <i class="bi bi-toggles me-1"></i>Both Allowed
+                                                
+                                                
+                                                    <span class="text-muted ms-1 fw-normal">(Inherited)</span>
+                                                
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr data-site-id="4">
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">Mumbai Corporate HQ</div>
+                                            <div class="text-muted small text-truncate" style="max-width: 320px;">Bandra Kurla Complex, Mumbai, MH</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-people-fill text-secondary me-1"></i>1 staff
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <select name="site_policy_4" class="form-select form-select-sm rounded-3 site-policy-select" data-site-id="4">
+                                                <option value="inherit" selected>
+                                                    Inherit Global Default (Both)
+                                                </option>
+                                                <option value="face_only" >
+                                                    Face Recognition Only
+                                                </option>
+                                                <option value="manual_only" >
+                                                    Manual Attendance Only
+                                                </option>
+                                                <option value="both" >
+                                                    Both (Employee Choice)
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <span id="effective_badge_4" class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                                
+                                                    <i class="bi bi-toggles me-1"></i>Both Allowed
+                                                
+                                                
+                                                    <span class="text-muted ms-1 fw-normal">(Inherited)</span>
+                                                
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr data-site-id="5">
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">Remote &amp; Field Operations</div>
+                                            <div class="text-muted small text-truncate" style="max-width: 320px;">Pan-India Field Locations</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-people-fill text-secondary me-1"></i>1 staff
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <select name="site_policy_5" class="form-select form-select-sm rounded-3 site-policy-select" data-site-id="5">
+                                                <option value="inherit" selected>
+                                                    Inherit Global Default (Both)
+                                                </option>
+                                                <option value="face_only" >
+                                                    Face Recognition Only
+                                                </option>
+                                                <option value="manual_only" >
+                                                    Manual Attendance Only
+                                                </option>
+                                                <option value="both" >
+                                                    Both (Employee Choice)
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <span id="effective_badge_5" class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1">
+                                                
+                                                    <i class="bi bi-toggles me-1"></i>Both Allowed
+                                                
+                                                
+                                                    <span class="text-muted ms-1 fw-normal">(Inherited)</span>
+                                                
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Part C: Effective Policy At-A-Glance Summary -->
+                <div class="p-3 bg-light rounded-4 border">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                        <span class="fw-bold small text-dark">
+                            <i class="bi bi-info-circle-fill text-primary me-1"></i>Effective Policy Summary: At A Glance
+                        </span>
+                        <span class="text-muted small">Updated in real-time as policies change</span>
+                    </div>
+                    <div class="row g-2 text-center" id="policySummaryCards">
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded-3 border">
+                                <span class="text-muted small d-block">Global Default</span>
+                                <strong id="summaryGlobalBadge" class="text-primary small text-uppercase">
+                                    both
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded-3 border">
+                                <span class="text-muted small d-block">Sites on Inherit</span>
+                                <strong id="summaryInheritCount" class="text-secondary small">
+                                    5 sites
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded-3 border">
+                                <span class="text-muted small d-block">Sites with Overrides</span>
+                                <strong id="summaryOverrideCount" class="text-dark small">
+                                    0 sites
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded-3 border">
+                                <span class="text-muted small d-block">Enforcement Status</span>
+                                <strong class="text-success small"><i class="bi bi-shield-check me-1"></i>Active & Enforced</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- SECTION 2: RECOGNITION ENGINE SETTINGS -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h5 class="fw-bold mb-3 text-dark">
+                <i class="bi bi-cpu-fill text-primary me-2"></i>Recognition Thresholds & Cooldown
+            </h5>
+            <form method="POST" action="/admin/settings">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">
+                            Strict Match Threshold (Euclidean Distance)
+                        </label>
+                        <input type="number" step="0.01" min="0.1" max="0.8" name="match_threshold" class="form-control rounded-3" value="0.48" required>
+                        <span class="text-muted" style="font-size: 0.75rem;">Default: 0.48. Lower values increase security against false matches.</span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">
+                            Review / Flag Threshold
+                        </label>
+                        <input type="number" step="0.01" min="0.1" max="0.8" name="review_threshold" class="form-control rounded-3" value="0.44" required>
+                        <span class="text-muted" style="font-size: 0.75rem;">Default: 0.44. Distances above this trigger administrator review.</span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">
+                            Duplicate Check-in Cooldown (Seconds)
+                        </label>
+                        <input type="number" min="0" max="86400" name="duplicate_cooldown_seconds" class="form-control rounded-3" value="300" required>
+                        <span class="text-muted" style="font-size: 0.75rem;">Default: 300s (5 mins) prevents rapid multiple check-ins.</span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">
+                            Geocoding Provider
+                        </label>
+                        <select name="geocoding_provider" class="form-select rounded-3">
+                            <option value="nominatim" selected>OpenStreetMap / Nominatim (Default)</option>
+                            <option value="google" >Google Maps Geocoding API</option>
+                        </select>
+                        <span class="text-muted" style="font-size: 0.75rem;">Reverse geocoder for GPS watermark resolution.</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-outline-primary rounded-pill px-4 fw-semibold">
+                        <i class="bi bi-save me-1"></i> Save Engine Thresholds
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SECTION 3: ARCHITECTURE & SECURITY CARD -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <h6 class="fw-bold text-dark mb-3">Model Architecture & Security</h6>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-cpu text-primary fs-5"></i>
+                <span class="fw-bold small text-dark">dlib ResNet-34 128-D Vector</span>
+            </div>
+            <p class="text-muted small mb-3">
+                Calculates Euclidean metric distance between reference multi-angle embeddings and live burst camera frames.
+            </p>
+
+            <div class="border-top pt-3">
+                <h6 class="fw-bold text-dark small mb-2">Anti-Spoofing & Security</h6>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Multi-frame blink challenge</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Minimum face resolution guard (>=100x100)</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> Dynamic ambiguity margin check</li>
+                    <li class="mb-2"><i class="bi bi-check2 text-success me-1"></i> GPS accuracy & timestamp hash</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+        </div>
+
+        <footer class="mt-auto py-3 px-4 border-top bg-white text-muted small d-flex justify-content-between">
+            <span>&copy; 2026 GeoFace Enterprise Facial Recognition Attendance Platform</span>
+
+        </footer>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('adminSidebar');
+        if (openBtn && sidebar) {
+            openBtn.addEventListener('click', () => sidebar.classList.add('show'));
+        }
+        if (closeBtn && sidebar) {
+            closeBtn.addEventListener('click', () => sidebar.classList.remove('show'));
+        }
+    </script>
+    
+<script>
+// Interactive Policy Card Styling & Radio Selection
+document.querySelectorAll(".global-policy-radio").forEach(radio => {
+    radio.addEventListener("change", function() {
+        document.querySelectorAll(".policy-card").forEach(c => {
+            c.classList.remove("border-primary", "bg-primary", "border-success", "bg-success", "border-info", "bg-info", "bg-opacity-10");
+            c.classList.add("border-light-subtle", "bg-light");
+        });
+        const card = document.getElementById("card_" + this.value);
+        if (card) {
+            card.classList.remove("border-light-subtle", "bg-light");
+            if (this.value === "face_only") card.classList.add("border-primary", "bg-primary", "bg-opacity-10");
+            else if (this.value === "manual_only") card.classList.add("border-success", "bg-success", "bg-opacity-10");
+            else card.classList.add("border-info", "bg-info", "bg-opacity-10");
+        }
+        updateSiteInheritLabels(this.value);
+        updateEffectiveBadges();
+    });
+});
+
+function updateSiteInheritLabels(globalPolicy) {
+    const policyName = globalPolicy === "face_only" ? "Face Only" : (globalPolicy === "manual_only" ? "Manual Only" : "Both");
+    document.querySelectorAll(".site-policy-select").forEach(sel => {
+        const inheritOpt = sel.querySelector('option[value="inherit"]');
+        if (inheritOpt) {
+            inheritOpt.innerText = `Inherit Global Default (${policyName})`;
+        }
+    });
+}
+
+function getSelectedGlobalPolicy() {
+    const checked = document.querySelector('input[name="global_attendance_policy"]:checked');
+    return checked ? checked.value : "both";
+}
+
+function updateEffectiveBadges() {
+    const globalPolicy = getSelectedGlobalPolicy();
+    let inheritCount = 0;
+    let overrideCount = 0;
+
+    document.querySelectorAll(".site-policy-select").forEach(sel => {
+        const siteId = sel.dataset.siteId;
+        const val = sel.value;
+        const badge = document.getElementById("effective_badge_" + siteId);
+        if (!badge) return;
+
+        const effective = (val === "inherit" || !val) ? globalPolicy : val;
+        const isInherited = (val === "inherit" || !val);
+
+        if (isInherited) inheritCount++;
+        else overrideCount++;
+
+        let badgeClass = "badge px-2 py-1 ";
+        let badgeHtml = "";
+
+        if (effective === "face_only") {
+            badgeClass += "bg-primary-subtle text-primary border border-primary-subtle";
+            badgeHtml = `<i class="bi bi-camera-video me-1"></i>Face Only`;
+        } else if (effective === "manual_only") {
+            badgeClass += "bg-success-subtle text-success border border-success-subtle";
+            badgeHtml = `<i class="bi bi-pencil-square me-1"></i>Manual Only`;
+        } else {
+            badgeClass += "bg-info-subtle text-info border border-info-subtle";
+            badgeHtml = `<i class="bi bi-toggles me-1"></i>Both Allowed`;
+        }
+
+        if (isInherited) {
+            badgeHtml += ` <span class="text-muted ms-1 fw-normal">(Inherited)</span>`;
+        } else {
+            badgeHtml += ` <span class="text-secondary ms-1 fw-semibold">(Override)</span>`;
+        }
+
+        badge.className = badgeClass;
+        badge.innerHTML = badgeHtml;
+    });
+
+    const summaryGlobal = document.getElementById("summaryGlobalBadge");
+    if (summaryGlobal) summaryGlobal.innerText = globalPolicy.replace('_', ' ');
+
+    const summaryInherit = document.getElementById("summaryInheritCount");
+    if (summaryInherit) summaryInherit.innerText = `${inheritCount} sites`;
+
+    const summaryOverride = document.getElementById("summaryOverrideCount");
+    if (summaryOverride) summaryOverride.innerText = `${overrideCount} sites`;
+}
+
+document.querySelectorAll(".site-policy-select").forEach(sel => {
+    sel.addEventListener("change", updateEffectiveBadges);
+});
+
+// Interactive AJAX Save with Toast Confirmation
+const savePolicyBtn = document.getElementById("savePolicyBtn");
+const policyToastEl = document.getElementById("policyToast");
+const policyToast = policyToastEl ? new bootstrap.Toast(policyToastEl, { delay: 4000 }) : null;
+
+savePolicyBtn?.addEventListener("click", async () => {
+    savePolicyBtn.disabled = true;
+    savePolicyBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span> Saving...`;
+
+    const globalPolicy = getSelectedGlobalPolicy();
+    const siteOverrides = {};
+
+    document.querySelectorAll(".site-policy-select").forEach(sel => {
+        const siteId = sel.dataset.siteId;
+        siteOverrides[siteId] = sel.value;
+    });
+
+    try {
+        const res = await fetch("/admin/api/admin/settings/attendance-policy", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                global_attendance_policy: globalPolicy,
+                site_overrides: siteOverrides
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            updateEffectiveBadges();
+            if (policyToast) {
+                document.getElementById("toastMsg").innerText = data.message || "Attendance policies saved successfully. Changes take effect immediately.";
+                policyToast.show();
+            }
+        } else {
+            alert("Failed to save policy: " + (data.error || "Unknown error"));
+        }
+    } catch (e) {
+        // Fallback to regular form submission if fetch fails
+        document.getElementById("attendancePolicyForm").submit();
+    } finally {
+        savePolicyBtn.disabled = false;
+        savePolicyBtn.innerHTML = `<i class="bi bi-save me-1"></i> Save Policy Changes`;
+    }
+});
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Executive Dashboard | GeoFace Enterprise</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Bootstrap 5 CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=5">
+    <style>
+        :root {
+            --admin-primary: #4f46e5;
+            --admin-primary-hover: #4338ca;
+            --admin-accent: #6366f1;
+            --admin-sidebar-bg: #0f172a;
+            --admin-sidebar-border: #1e293b;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .admin-sidebar {
+            width: 270px;
+            background: var(--admin-sidebar-bg);
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--admin-sidebar-border);
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1040;
+            transition: transform 0.3s ease;
+        }
+
+        .admin-sidebar .sidebar-logo {
+            padding: 22px 20px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .admin-sidebar-nav {
+            padding: 14px 12px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 14px;
+            color: #94a3b8;
+            font-size: 0.86rem;
+            font-weight: 500;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            margin-bottom: 3px;
+        }
+
+        .admin-nav-item:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .admin-nav-item.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+            font-weight: 600;
+        }
+
+        .admin-nav-item i {
+            font-size: 1.05rem;
+        }
+
+        .nav-category {
+            font-size: 0.70rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            font-weight: 700;
+            padding: 14px 12px 6px;
+        }
+
+        .admin-main {
+            margin-left: 270px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-topbar {
+            height: 64px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .admin-content {
+            padding: 28px;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 991.98px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+        }
+
+        .badge-verified {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+
+        .badge-flagged {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+    </style>
+    
+</head>
+
+<body>
+
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-logo d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div
+                    style="width: 38px; height: 38px; background: linear-gradient(135deg, #4f46e5, #6366f1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.15rem; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <div>
+                    <div class="fw-bold text-white fs-6 lh-1">GeoFace HR</div>
+                    <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Enterprise Governance</div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-dark d-lg-none border-0 text-white" id="closeSidebarBtn">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <nav class="admin-sidebar-nav">
+            <div class="nav-category">Main Overview</div>
+            <a href="/admin/dashboard"
+                class="admin-nav-item active">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a href="/admin/attendance"
+                class="admin-nav-item ">
+                <i class="bi bi-clipboard2-data"></i> All Attendance
+            </a>
+            <a href="/admin/flagged" class="admin-nav-item ">
+                <i class="bi bi-shield-exclamation"></i> Flagged & Audit Queue
+            </a>
+
+            <div class="nav-category mt-2">Workforce & Operations</div>
+            <a href="/admin/sites" class="admin-nav-item ">
+                <i class="bi bi-geo-alt"></i> Sites & Geofencing
+            </a>
+            <a href="/admin/shifts" class="admin-nav-item ">
+                <i class="bi bi-clock-history"></i> Shifts & Hours
+            </a>
+            <a href="/admin/employees"
+                class="admin-nav-item ">
+                <i class="bi bi-people"></i> Employee Roster
+            </a>
+            <a href="/admin/enroll" class="admin-nav-item ">
+                <i class="bi bi-person-bounding-box"></i> Enroll Face (Consent)
+            </a>
+
+            <div class="nav-category mt-2">Payroll & Governance</div>
+            <a href="/admin/payroll-export"
+                class="admin-nav-item ">
+                <i class="bi bi-cash-stack"></i> Payroll CSV Export
+            </a>
+            <a href="/admin/audit-logs"
+                class="admin-nav-item ">
+                <i class="bi bi-journal-text"></i> Audit Trail
+            </a>
+            <a href="/admin/settings"
+                class="admin-nav-item ">
+                <i class="bi bi-sliders2"></i> Engine Settings
+            </a>
+        </nav>
+
+        <div class="p-3" style="border-top: 1px solid #1e293b; background: rgba(0,0,0,0.15);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary rounded-circle" style="width: 8px; height: 8px;"></div>
+                    <span class="small text-light fw-medium">System Administrator</span>
+                </div>
+                <a href="/admin/logout" class="text-danger text-decoration-none small fw-semibold"
+                    title="Sign out admin">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-sm btn-light border d-lg-none" id="openSidebarBtn">
+                    <i class="bi bi-list fs-5"></i>
+                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small">GeoFace Enterprise</span>
+                    <span class="text-muted small">/</span>
+                    <span class="fw-semibold text-dark small">Executive Oversight Dashboard</span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-light text-secondary border px-3 py-2">
+                    <i class="bi bi-hdd-network text-success me-1"></i> Multi-Site Mode: Active
+                </span>
+                <a href="/employee/check-in-out" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                    title="Test employee check-in view">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Employee Portal
+                </a>
+            </div>
+        </header>
+
+        <!-- Flash Notification Banners -->
+        <div class="px-4 pt-3">
+            
+            
+            
+        </div>
+
+        <div class="admin-content">
+            
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h4 class="fw-bold mb-1 text-dark">Executive Oversight Dashboard</h4>
+        <p class="text-muted small mb-0">Multi-site enterprise attendance, geofencing integrity, punctuality, and overtime analytics</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/admin/attendance" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-list-check me-1"></i> Master Records
+        </a>
+        <a href="/admin/payroll-export" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold" style="background:#059669; border-color:#059669;">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Payroll Export
+        </a>
+    </div>
+</div>
+
+<!-- Key Performance Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Total Workforce</span>
+                <div class="badge rounded-circle p-2 bg-primary-subtle text-primary">
+                    <i class="bi bi-people-fill fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold text-dark mb-0">34</h3>
+            <span class="text-muted small">Across 5 active office sites</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Checked In Right Now</span>
+                <div class="badge rounded-circle p-2 bg-success-subtle text-success">
+                    <i class="bi bi-check2-circle fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold text-dark mb-0">5</h3>
+            <span class="text-success small fw-semibold">14.7% Attendance Rate Today</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Overtime Accrued</span>
+                <div class="badge rounded-circle p-2 bg-info-subtle text-info">
+                    <i class="bi bi-clock-history fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold text-primary mb-0">0.2 hrs</h3>
+            <span class="text-muted small">Company-wide this pay period</span>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-semibold">Flagged / Anomalies</span>
+                <div class="badge rounded-circle p-2 bg-danger-subtle text-danger">
+                    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold text-danger mb-0">4</h3>
+            <span class="text-danger small">Geofence violations or audit flags</span>
+        </div>
+    </div>
+</div>
+
+<!-- Visualizations Row -->
+<div class="row g-4 mb-4">
+    <!-- Chart 1: 14-Day Attendance & Punctuality Trend -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">14-Day Attendance & Punctuality Trend</h6>
+                    <small class="text-muted">Daily distribution of on-time check-ins, late arrivals, and flagged events</small>
+                </div>
+                <span class="badge bg-light text-muted border px-2 py-1 small">
+                    <i class="bi bi-graph-up text-primary me-1"></i> Live Aggregate
+                </span>
+            </div>
+            <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Punctuality Breakdown by Department -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0">Department Punctuality</h6>
+                    <small class="text-muted">On-Time vs Late breakdown</small>
+                </div>
+            </div>
+            <div style="position: relative; height: 260px; width: 100%;">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Organization-Wide Activity Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+    <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-activity text-primary me-2"></i>Live Multi-Site Attendance Stream
+        </h6>
+        <a href="/admin/attendance" class="text-primary text-decoration-none small fw-semibold">View All Records &rarr;</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+            <thead class="table-light text-secondary">
+                <tr>
+                    <th class="ps-4">Employee</th>
+                    <th>Event</th>
+                    <th>Timestamp</th>
+                    <th>Site Location</th>
+                    <th>Distance & Geofence</th>
+                    <th>Work Policy & Status</th>
+                    <th class="text-end pe-4">Detail</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Aarav Sharma</div>
+                            <div class="text-muted small">ID: EMP-001 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                Check Out
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 24, 2026 - 12:45 AM</td>
+                        <td>Headquarters</td>
+                        <td>
+                            
+                                <span>18m</span>
+                                
+                                <span class="badge bg-success-subtle text-success ms-1">Within Radius</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-secondary rounded-pill px-2 py-1">overtime</span>
+                                
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/564" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Sneha Kulkarni</div>
+                            <div class="text-muted small">ID: EMP-004 • Field Sales &amp; Services</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                Check Out
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 24, 2026 - 12:05 AM</td>
+                        <td>Headquarters</td>
+                        <td>
+                            
+                                <span>0m</span>
+                                
+                                <span class="badge bg-success-subtle text-success ms-1">Within Radius</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>Complete</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    — of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/567" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Ayushi Nasare</div>
+                            <div class="text-muted small">ID: 24070521174 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 23, 2026 - 04:14 PM</td>
+                        <td>Tech Park Headquarters (Mumbai)</td>
+                        <td>
+                            
+                                <span>0m</span>
+                                
+                                <span class="badge bg-success-subtle text-success ms-1">Within Radius</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1"><i class="bi bi-broadcast me-1"></i>In Progress</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    Worked 0.0h 6.3m of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/562" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Aayushi</div>
+                            <div class="text-muted small">ID: 789 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 23, 2026 - 04:14 PM</td>
+                        <td>Tech Park Headquarters (Mumbai)</td>
+                        <td>
+                            
+                                <span class="text-muted">No GPS</span>
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1"><i class="bi bi-broadcast me-1"></i>In Progress</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    Worked 0.0h 6.3m of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/561" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Aayushi</div>
+                            <div class="text-muted small">ID: 789 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 23, 2026 - 04:14 PM</td>
+                        <td>Tech Park Headquarters (Mumbai)</td>
+                        <td>
+                            
+                                <span>1482m</span>
+                                
+                                <span class="badge bg-danger text-white ms-1">Outside Geofence</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1"><i class="bi bi-broadcast me-1"></i>In Progress</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    Worked 0.0h 6.3m of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/560" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Sneha Kulkarni</div>
+                            <div class="text-muted small">ID: EMP-004 • Field Sales &amp; Services</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 23, 2026 - 02:50 PM</td>
+                        <td>Headquarters</td>
+                        <td>
+                            
+                                <span>0m</span>
+                                
+                                <span class="badge bg-success-subtle text-success ms-1">Within Radius</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1"><i class="bi bi-broadcast me-1"></i>In Progress</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    — of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/566" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Aditya Verma</div>
+                            <div class="text-muted small">ID: EMP-002 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 23, 2026 - 02:48 PM</td>
+                        <td>Headquarters</td>
+                        <td>
+                            
+                                <span>124800m</span>
+                                
+                                <span class="badge bg-danger text-white ms-1">Outside Geofence</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1"><i class="bi bi-broadcast me-1"></i>In Progress</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    Worked 0.0h 35.0m of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/565" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Aarav Sharma</div>
+                            <div class="text-muted small">ID: EMP-001 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 23, 2026 - 02:28 PM</td>
+                        <td>Headquarters</td>
+                        <td>
+                            
+                                <span>28m</span>
+                                
+                                <span class="badge bg-success-subtle text-success ms-1">Within Radius</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-success rounded-pill px-2 py-1"><i class="bi bi-check-circle me-1"></i>On-Time</span>
+                                
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/563" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Ayushi Nasare</div>
+                            <div class="text-muted small">ID: 24070521174 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 20, 2026 - 06:55 PM</td>
+                        <td>Tech Park Headquarters (Mumbai)</td>
+                        <td>
+                            
+                                <span>0m</span>
+                                
+                                <span class="badge bg-success-subtle text-success ms-1">Within Radius</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1"><i class="bi bi-broadcast me-1"></i>In Progress</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    Worked 1.0h 33.099999999999994m of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/541" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">Ayushi Nasare</div>
+                            <div class="text-muted small">ID: 24070521174 • Engineering &amp; Architecture</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                Check In
+                            </span>
+                        </td>
+                        <td class="text-muted">Oct 20, 2026 - 06:54 PM</td>
+                        <td>Tech Park Headquarters (Mumbai)</td>
+                        <td>
+                            
+                                <span>0m</span>
+                                
+                                <span class="badge bg-success-subtle text-success ms-1">Within Radius</span>
+                                
+                            
+                        </td>
+                        <td>
+                            
+                                
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-1"><i class="bi bi-broadcast me-1"></i>In Progress</span>
+                                
+                                <div class="text-muted small mt-1" style="font-size: 0.73rem;">
+                                    Worked 1.0h 33.099999999999994m of 8h
+                                </div>
+                            
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/attendance/520" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                                Inspect
+                            </a>
+                        </td>
+                    </tr>
+                    
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+        </div>
+
+        <footer class="mt-auto py-3 px-4 border-top bg-white text-muted small d-flex justify-content-between">
+            <span>&copy; 2026 GeoFace Enterprise Facial Recognition Attendance Platform</span>
+
+        </footer>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const openBtn = document.getElementById('openSidebarBtn');
+        const closeBtn = document.getElementById('closeSidebarBtn');
+        const sidebar = document.getElementById('adminSidebar');
+        if (openBtn && sidebar) {
+            openBtn.addEventListener('click', () => sidebar.classList.add('show'));
+        }
+        if (closeBtn && sidebar) {
+            closeBtn.addEventListener('click', () => sidebar.classList.remove('show'));
+        }
+    </script>
+    
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+fetch('/admin/dashboard/summary')
+    .then(r => r.json())
+    .then(data => {
+        // 1. Trend Chart (Both Fixed and Flexible)
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: data.trend.labels,
+                datasets: [
+                    {
+                        label: 'On-Time (Fixed)',
+                        data: data.trend.on_time,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: false,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Late (Fixed)',
+                        data: data.trend.late,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: false,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Complete (Flex)',
+                        data: data.trend.complete || [],
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        fill: false,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Short Hours (Flex)',
+                        data: data.trend.short_hours || [],
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                        fill: false,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Core Missed (Flex)',
+                        data: data.trend.core_missed || [],
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                        fill: false,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Flagged Audit',
+                        data: data.trend.flagged,
+                        borderColor: '#991b1b',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+
+        // 2. Department Breakdown Chart
+        const deptCtx = document.getElementById('deptChart').getContext('2d');
+        new Chart(deptCtx, {
+            type: 'bar',
+            data: {
+                labels: data.department_punctuality.departments,
+                datasets: [
+                    {
+                        label: 'On-Time',
+                        data: data.department_punctuality.on_time,
+                        backgroundColor: '#10b981'
+                    },
+                    {
+                        label: 'Late',
+                        data: data.department_punctuality.late,
+                        backgroundColor: '#f59e0b'
+                    },
+                    {
+                        label: 'Complete (Flex)',
+                        data: data.department_punctuality.complete || [],
+                        backgroundColor: '#059669'
+                    },
+                    {
+                        label: 'Short Hours (Flex)',
+                        data: data.department_punctuality.short_hours || [],
+                        backgroundColor: '#d97706'
+                    },
+                    {
+                        label: 'Core Missed (Flex)',
+                        data: data.department_punctuality.core_missed || [],
+                        backgroundColor: '#dc2626'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+                }
+            }
+        });
+    })
+    .catch(e => console.error("Chart loading error:", e));
+</script>
+
+</body>
+
+</html>

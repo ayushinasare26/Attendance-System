@@ -1,0 +1,13 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# GitHub Linguist Overrides - GSD tooling, artifacts, and test fixtures
+.gsd/** linguist-documentation
+.gsd/screenshots/** linguist-vendored
+.gsd/html_snapshots/** linguist-vendored
+scripts/** linguist-vendored
+tests/** linguist-vendored
+attendance_photos/** linguist-vendored
+dataset/** linguist-vendored
+static/dataset/** linguist-vendored
+frontend/public/static/** linguist-vendored

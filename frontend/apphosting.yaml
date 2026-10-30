@@ -1,0 +1,10 @@
+runConfig:
+  minInstances: 0
+  maxInstances: 5
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+env:
+  - variable: FLASK_API_URL
+    value: "https://attendance-backend-YOUR_PROJECT_ID.a.run.app"

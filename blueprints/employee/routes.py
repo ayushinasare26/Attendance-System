@@ -46,9 +46,10 @@ def login():
 
     error = None
     if request.method == "POST":
-        identifier = request.form.get("identifier", "").strip()
-        password = request.form.get("password", "").strip()
-        demo_id = request.form.get("demo_employee_id") or request.form.get("demo_student_id")
+        data = (request.get_json(silent=True) or {}) if request.is_json else (request.form or {})
+        identifier = str(data.get("identifier") or "").strip()
+        password = str(data.get("password") or "").strip()
+        demo_id = data.get("demo_employee_id") or data.get("demo_student_id")
 
         if demo_id:
             user = authenticate_employee(demo_id, is_demo=True)

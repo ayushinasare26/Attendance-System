@@ -50,10 +50,10 @@ def login():
 
     error = None
     if request.method == "POST":
-        data = request.form
-        username = data.get("username", "").strip()
-        password = data.get("password", "").strip()
-        demo_admin = data.get("demo_admin") == "true"
+        data = (request.get_json(silent=True) or {}) if request.is_json else (request.form or {})
+        username = str(data.get("username") or "").strip()
+        password = str(data.get("password") or "").strip()
+        demo_admin = str(data.get("demo_admin")).lower() in ("true", "1")
 
         if demo_admin:
             admin = authenticate_admin(Config.ADMIN_USERNAME, Config.ADMIN_PASSWORD)

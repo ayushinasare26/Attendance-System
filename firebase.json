@@ -5,15 +5,6 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/api/v1/**",
-        "run": {
-          "serviceId": "attendance-backend",
-          "region": "us-central1"
-        }
-      }
     ]
   }
 }

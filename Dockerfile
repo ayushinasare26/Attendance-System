@@ -12,9 +12,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy and install Python dependencies
+# Limit CMake to 1 core so compilation uses under 1.5 GB RAM instead of running out of 8 GB on multi-core servers
+ENV CMAKE_BUILD_PARALLEL_LEVEL=1
+
+# Copy requirements and install
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --no-cache-dir gunicorn
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all application code
 COPY . .

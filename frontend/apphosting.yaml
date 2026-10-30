@@ -8,3 +8,4 @@ runConfig:
 env:
   - variable: FLASK_API_URL
     value: "https://attendance-backend-YOUR_PROJECT_ID.a.run.app"
+

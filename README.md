@@ -204,7 +204,8 @@ enterprise-attendance-system/
 ### 1. Environment Installation
 ```bash
 # Clone repository
-cd "Attendance System"
+git clone https://github.com/ayushinasare26/Attendance-System.git
+cd Attendance-System
 
 # Create and activate virtual environment
 python -m venv venv

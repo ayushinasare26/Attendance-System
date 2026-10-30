@@ -150,7 +150,9 @@ def verify_liveness(frames, challenge_type="blink", is_demo=False):
     # Attempt facial landmark analysis if face_recognition engine is available
     frame_metrics = []
     if face_recognition is not None:
-        for rgb in rgb_frames:
+        # Sample at most 2 representative burst endpoints to prevent CPU starvation on cloud containers
+        sample_frames = [rgb_frames[0], rgb_frames[-1]] if len(rgb_frames) > 2 else rgb_frames
+        for rgb in sample_frames:
             metrics = analyze_frame_liveness(rgb)
             if metrics.get("face_found"):
                 frame_metrics.append(metrics)

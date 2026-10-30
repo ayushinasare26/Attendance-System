@@ -101,13 +101,12 @@ def reverse_geocode(latitude, longitude, timeout=None):
     except Exception:
         pass
 
-    fallback_str = f"Lat: {lat:.4f}°, Lon: {lon:.4f}° (Lookup Pending)"
+    fallback_str = f"Lat: {lat:.4f}°, Lon: {lon:.4f}°"
 
     try:
-        geolocator = get_geocoder(timeout=timeout)
-        reverse_call = get_rate_limited_reverse(geolocator, min_delay_seconds=1.0)
-        
-        location = reverse_call((lat, lon))
+        eff_timeout = min(float(timeout or getattr(Config, "GEOCODING_TIMEOUT_SECONDS", 1.5)), 1.5)
+        geolocator = get_geocoder(timeout=eff_timeout)
+        location = geolocator.reverse((lat, lon), timeout=eff_timeout)
         if location and location.address:
             # Format clean address (first 4 components for concise display)
             parts = [p.strip() for p in location.address.split(",")]
@@ -120,8 +119,8 @@ def reverse_geocode(latitude, longitude, timeout=None):
             except Exception:
                 pass
             return short_address
-    except (GeocoderTimedOut, GeocoderUnavailable, GeocoderServiceError, GeopyError, Exception):
-        # Graceful fallback: return coordinate representation
+    except Exception:
+        # Graceful fallback: return coordinate representation immediately without blocking
         pass
 
     return fallback_str

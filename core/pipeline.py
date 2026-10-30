@@ -238,33 +238,23 @@ def run_attendance_pipeline(
     record_stage("Liveness Check", "Completed", f"{liveness_res['reason']} (Score: {liveness_res['score']})")
 
     # ---------------- STAGE 3: Face Detection ----------------
-    decoded_candidate_frames = [rgb_image]
-    if liveness_frames:
-        for lf in liveness_frames:
+    best_frame = rgb_image
+    best_loc, best_emb, best_err = detect_face_and_embedding(rgb_image)
+
+    # Fallback to checking alternative burst frames only if primary capture did not contain a face
+    if best_emb is None and liveness_frames:
+        for lf in liveness_frames[:2]:
             try:
-                decoded_candidate_frames.append(decode_image_bytes(lf))
+                candidate_rgb = decode_image_bytes(lf)
+                loc, emb, err = detect_face_and_embedding(candidate_rgb)
+                if loc is not None and emb is not None:
+                    best_frame = candidate_rgb
+                    best_loc = loc
+                    best_emb = emb
+                    best_err = None
+                    break
             except Exception:
                 pass
-
-    best_frame = rgb_image
-    best_loc = None
-    best_emb = None
-    best_err = None
-    best_face_area = 0
-
-    for candidate_rgb in decoded_candidate_frames:
-        loc, emb, err = detect_face_and_embedding(candidate_rgb)
-        if loc is not None and emb is not None:
-            top, right, bottom, left = loc
-            area = (bottom - top) * (right - left)
-            if area > best_face_area:
-                best_face_area = area
-                best_frame = candidate_rgb
-                best_loc = loc
-                best_emb = emb
-                best_err = None
-        elif best_err is None and err:
-            best_err = err
 
     if best_emb is None or best_loc is None:
         record_stage("Face Detection", "Failed", best_err or "No valid face found in capture")

@@ -143,7 +143,7 @@ class Config:
     GEOCODING_PROVIDER = os.environ.get("GEOCODING_PROVIDER", "nominatim")
     GEOCODING_API_KEY = os.environ.get("GEOCODING_API_KEY", "")
     NOMINATIM_USER_AGENT = os.environ.get("NOMINATIM_USER_AGENT", "GeoFaceAttendanceEnterprise/2.0 (geoface-workforce-attendance-system)")
-    GEOCODING_TIMEOUT_SECONDS = float(os.environ.get("GEOCODING_TIMEOUT_SECONDS", 5.0))
+    GEOCODING_TIMEOUT_SECONDS = float(os.environ.get("GEOCODING_TIMEOUT_SECONDS", 1.5))
     GEOCODING_CACHE_TTL_DAYS = int(os.environ.get("GEOCODING_CACHE_TTL_DAYS", 30))
     
     # Flask Session / Auth

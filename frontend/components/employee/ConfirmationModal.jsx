@@ -16,10 +16,10 @@ export default function ConfirmationModal({ show, modalData, onHide, onRefresh }
 
   const headerBg = isOut
     ? 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)'
-    : 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+    : 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)';
 
   const status = modalData.status || 'on_time';
-  let badgeClass = 'badge bg-success-subtle text-success px-3 py-1 rounded-pill';
+  let badgeClass = 'badge bg-primary-subtle text-primary px-3 py-1 rounded-pill';
   if (status === 'flagged') {
     badgeClass = 'badge bg-danger-subtle text-danger px-3 py-1 rounded-pill';
   } else if (status === 'late') {
@@ -157,7 +157,7 @@ export default function ConfirmationModal({ show, modalData, onHide, onRefresh }
             <div className="modal-footer border-0 pt-0">
               <button
                 type="button"
-                className="btn btn-success w-100 rounded-pill py-2 fw-semibold"
+                className="btn btn-navy w-100 rounded-pill py-2 fw-semibold text-white"
                 onClick={onRefresh || onHide}
               >
                 Done & Refresh Status

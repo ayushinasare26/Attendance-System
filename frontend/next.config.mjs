@@ -1,11 +1,14 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   skipTrailingSlashRedirect: true,
+
   async rewrites() {
     const flaskBackendUrl =
       process.env.FLASK_API_URL ||
       'https://attendance-backend-w4ox.onrender.com';
+
     return [
       {
         source: '/api/v1/:path*',

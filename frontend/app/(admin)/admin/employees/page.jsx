@@ -154,7 +154,7 @@ function AdminEmployeesContent() {
           </Link>
           <Link
             href="/admin/enroll"
-            className="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm"
+            className="btn btn-navy rounded-pill px-4 fw-semibold shadow-sm"
           >
             <i className="bi bi-person-plus-fill me-1"></i> Enroll New Employee
           </Link>
@@ -265,7 +265,7 @@ function AdminEmployeesContent() {
                     <td>
                       <div className="d-flex align-items-center gap-2">
                         <img
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=6366f1&color=fff&rounded=true`}
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=0f172a&color=fff&rounded=true`}
                           style={{ width: '32px', height: '32px' }}
                           alt=""
                         />
@@ -284,7 +284,7 @@ function AdminEmployeesContent() {
                       ) : emp.role === 'manager' ? (
                         <span className="badge bg-warning text-dark rounded-pill px-2 py-1">Manager</span>
                       ) : (
-                        <span className="badge bg-secondary rounded-pill px-2 py-1">Employee</span>
+                        <span className="badge bg-light text-secondary border rounded-pill px-2 py-1">Employee</span>
                       )}
                     </td>
 

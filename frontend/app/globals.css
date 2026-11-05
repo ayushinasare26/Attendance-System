@@ -7,9 +7,10 @@
    =================================================== */
 
 :root {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: #e0e7ff;
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --primary-light: #eff6ff;
+  --primary-border: #bfdbfe;
   --success: #10b981;
   --success-light: #d1fae5;
   --warning: #f59e0b;
@@ -17,6 +18,10 @@
   --danger: #ef4444;
   --danger-light: #fee2e2;
   --dark: #0f172a;
+  --navy-dark: #0f172a;
+  --navy-darker: #0b1320;
+  --navy-sidebar: #0b1320;
+  --navy-border: #152238;
   --slate-800: #1e293b;
   --slate-700: #334155;
   --slate-600: #475569;
@@ -24,10 +29,10 @@
   --slate-400: #94a3b8;
   --slate-200: #e2e8f0;
   --slate-100: #f1f5f9;
-  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f1f5f9 100%);
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
-  --card-shadow-hover: 0 20px 30px -10px rgba(79, 70, 229, 0.12);
+  --bg-gradient: #f8fafc;
+  --card-bg: #ffffff;
+  --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --card-shadow-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
@@ -78,14 +83,14 @@ body {
 .logo-badge {
   width: 42px;
   height: 42px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
   color: white;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);
 }
 
 .sidebar-nav {
@@ -129,10 +134,58 @@ body {
 }
 
 .sidebar-nav .nav-item.active {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background: #1d4ed8;
   color: #ffffff;
   font-weight: 600;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
+}
+
+/* Custom UI Utility Classes matching screenshots */
+.btn-navy {
+  background-color: #0f172a !important;
+  border-color: #0f172a !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.btn-navy:hover, .btn-navy:focus {
+  background-color: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+.btn-royal {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.btn-royal:hover, .btn-royal:focus {
+  background-color: #1e40af !important;
+  border-color: #1e40af !important;
+  color: #ffffff !important;
+}
+
+.badge-royal {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 600;
+}
+
+.badge-navy {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.badge-muted {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
 .sidebar-nav .nav-item.active i {

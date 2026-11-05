@@ -119,8 +119,7 @@ export default function AdminPayrollExportPage() {
               <div className="d-grid gap-2">
                 <button
                   type="submit"
-                  className="btn btn-success rounded-pill py-2 fw-semibold shadow-sm"
-                  style={{ background: '#059669', borderColor: '#059669' }}
+                  className="btn btn-navy rounded-pill py-2 fw-semibold shadow-sm text-white"
                 >
                   <i className="bi bi-file-earmark-spreadsheet me-1"></i> Generate Payroll-Ready CSV
                 </button>

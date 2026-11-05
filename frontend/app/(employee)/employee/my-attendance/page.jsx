@@ -55,7 +55,7 @@ export default function MyAttendancePage() {
   if (loading && !data) {
     return (
       <div className="d-flex align-items-center justify-content-center py-5">
-        <div className="spinner-border text-success" role="status">
+        <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -246,22 +246,22 @@ export default function MyAttendancePage() {
       {/* Active Shift Status Banner */}
       {data?.is_currently_checked_in && (
         <div
-          className="alert alert-success border-0 shadow-sm rounded-4 d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 gap-3"
+          className="alert border-0 shadow-sm rounded-4 d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 gap-3"
           style={{
             background:
-              'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.08) 100%)',
-            borderLeft: '5px solid #10b981 !important',
+              'linear-gradient(135deg, rgba(29, 78, 216, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%)',
+            borderLeft: '5px solid #1d4ed8 !important',
           }}
         >
           <div className="d-flex align-items-center gap-3">
             <div
-              className="bg-success text-white rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm"
+              className="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm"
               style={{ width: '44px', height: '44px' }}
             >
               <i className="bi bi-person-check-fill fs-4"></i>
             </div>
             <div>
-              <div className="fw-bold text-success-emphasis fs-6">Today's Attendance Verified & Active</div>
+              <div className="fw-bold text-primary-emphasis fs-6">Today's Attendance Verified & Active</div>
               <div className="small text-secondary">
                 Your check-in was successfully verified and recorded. You currently have{' '}
                 <strong>{data.today_active_hours} hrs</strong> in progress. Don't forget to check out when leaving.
@@ -329,7 +329,7 @@ export default function MyAttendancePage() {
             </select>
           </div>
           <div className="col-md-3 d-flex align-items-end gap-2 pt-md-4">
-            <button type="submit" className="btn btn-sm btn-success rounded-pill px-3">
+            <button type="submit" className="btn btn-sm btn-navy rounded-pill px-3">
               <i className="bi bi-funnel"></i> Filter
             </button>
             <button
@@ -347,7 +347,7 @@ export default function MyAttendancePage() {
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
         <div className="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
           <h6 className="fw-bold mb-0 text-dark">
-            <i className="bi bi-calendar3 me-2 text-success"></i>Daily Attendance Log
+            <i className="bi bi-calendar3 me-2 text-primary"></i>Daily Attendance Log
           </h6>
           <span className="badge bg-light text-secondary border">{records.length} days recorded</span>
         </div>

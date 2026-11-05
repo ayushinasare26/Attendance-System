@@ -170,13 +170,12 @@ export default function AdminDashboardPage() {
           </p>
         </div>
         <div className="d-flex gap-2">
-          <Link href="/admin/attendance" className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold">
+          <Link href="/admin/attendance" className="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold">
             <i className="bi bi-list-check me-1"></i> Master Records
           </Link>
           <Link
             href="/admin/payroll-export"
-            className="btn btn-success btn-sm rounded-pill px-3 fw-semibold"
-            style={{ background: '#059669', borderColor: '#059669' }}
+            className="btn btn-navy btn-sm rounded-pill px-3 fw-semibold text-white"
           >
             <i className="bi bi-file-earmark-spreadsheet me-1"></i> Payroll Export
           </Link>

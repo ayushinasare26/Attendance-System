@@ -244,7 +244,7 @@ export default function CheckInOutPage() {
   if (loading) {
     return (
       <div className="d-flex align-items-center justify-content-center py-5">
-        <div className="spinner-border text-success" role="status">
+        <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -256,7 +256,7 @@ export default function CheckInOutPage() {
   const hasFaceEnrollment = Boolean(pageData?.has_face_enrollment);
 
   const isCheckOut = currentAction === 'check_out';
-  const actionBtnColor = isCheckOut ? '#dc2626' : '#059669';
+  const actionBtnColor = isCheckOut ? '#dc2626' : '#0f172a';
   const actionBtnText = isCheckOut ? 'Check Out Now' : 'Check In Now';
   const manualBtnText = isCheckOut ? 'Check Out Manually' : 'Check In Manually';
 
@@ -269,7 +269,7 @@ export default function CheckInOutPage() {
   );
 
   if (gpsStatus === 'ready') {
-    gpsBadgeClass = 'badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small';
+    gpsBadgeClass = 'badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small';
     gpsBadgeContent = (
       <>
         <i className="bi bi-geo-alt-fill me-1"></i> GPS Ready, accuracy ±{Math.round(userCoords.accuracy || 0)}m
@@ -401,7 +401,7 @@ export default function CheckInOutPage() {
                       onClick={() => handleSelectMethod('manual')}
                       className={`btn w-100 p-3 rounded-4 text-start position-relative transition-all ${
                         selectedMethod === 'manual'
-                          ? 'border-2 border-success bg-success bg-opacity-10 shadow-sm'
+                          ? 'border-2 border-primary bg-primary bg-opacity-10 shadow-sm'
                           : 'border border-light-subtle bg-light'
                       }`}
                     >
@@ -410,7 +410,7 @@ export default function CheckInOutPage() {
                           <i className="bi bi-shield-check text-secondary me-2"></i>Manual Attendance
                         </span>
                         {selectedMethod === 'manual' && (
-                          <span className="badge bg-success rounded-pill" id="methodManualBadge">
+                          <span className="badge bg-primary rounded-pill" id="methodManualBadge">
                             <i className="bi bi-check-lg"></i>
                           </span>
                         )}
@@ -557,7 +557,7 @@ export default function CheckInOutPage() {
                     id="modeCheckInBtn"
                     onClick={() => setCurrentAction('check_in')}
                     className={`btn btn-sm rounded-pill px-3 fw-semibold transition-all ${
-                      currentAction === 'check_in' ? 'btn-success text-white shadow-sm' : 'text-secondary'
+                      currentAction === 'check_in' ? 'btn-navy text-white shadow-sm' : 'text-secondary'
                     }`}
                   >
                     <i className="bi bi-box-arrow-in-right me-1"></i> Check In
@@ -620,7 +620,7 @@ export default function CheckInOutPage() {
                 <span className="text-muted small">
                   Event Mode:{' '}
                   <span
-                    className={`badge ${isCheckOut ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'}`}
+                    className={`badge ${isCheckOut ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary'}`}
                     id="eventModeBadge"
                   >
                     {isCheckOut ? 'Check Out' : 'Check In'}
@@ -657,7 +657,7 @@ export default function CheckInOutPage() {
                       id="manualModeCheckInBtn"
                       onClick={() => setCurrentAction('check_in')}
                       className={`btn btn-sm rounded-pill px-3 fw-semibold transition-all ${
-                        currentAction === 'check_in' ? 'btn-success text-white shadow-sm' : 'text-secondary'
+                        currentAction === 'check_in' ? 'btn-navy text-white shadow-sm' : 'text-secondary'
                       }`}
                     >
                       <i className="bi bi-box-arrow-in-right me-1"></i> Check In
@@ -699,7 +699,7 @@ export default function CheckInOutPage() {
                 </div>
 
                 <div className="mt-3 text-muted small">
-                  <i className="bi bi-shield-check text-success me-1"></i>Server-side timestamp recorded • Site: <strong>{pageData?.site?.name}</strong>
+                  <i className="bi bi-shield-check text-primary me-1"></i>Server-side timestamp recorded • Site: <strong>{pageData?.site?.name}</strong>
                 </div>
               </div>
             </div>
@@ -711,7 +711,7 @@ export default function CheckInOutPage() {
           {/* Work Site & Shift Card */}
           <div className="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
             <h6 className="fw-bold text-dark mb-3">
-              <i className="bi bi-geo-alt-fill text-success me-2"></i>Registered Work Site
+              <i className="bi bi-geo-alt-fill text-primary me-2"></i>Registered Work Site
             </h6>
             <div className="p-3 bg-light rounded-3 mb-3 border">
               <div className="fw-bold text-dark small">{pageData?.site?.name}</div>
@@ -719,7 +719,7 @@ export default function CheckInOutPage() {
               <hr className="my-2" />
               <div className="d-flex justify-content-between small">
                 <span className="text-secondary">Geofence Policy:</span>
-                <span className={`fw-semibold ${pageData?.site?.geofencing_enabled ? 'text-success' : 'text-info'}`}>
+                <span className={`fw-semibold ${pageData?.site?.geofencing_enabled ? 'text-primary' : 'text-info'}`}>
                   {pageData?.site?.geofencing_enabled
                     ? `${Math.round(pageData.site.geofence_radius_meters)}m Fixed Radius`
                     : 'Field / Multi-Site (No Radius)'}
@@ -736,7 +736,7 @@ export default function CheckInOutPage() {
                 <span className="fw-semibold">
                   {pageData?.shift?.name}
                   {isFlexible ? (
-                    <span className="badge bg-success-subtle text-success border border-success-subtle ms-1">
+                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle ms-1">
                       Flexible Hours
                     </span>
                   ) : (
@@ -772,7 +772,7 @@ export default function CheckInOutPage() {
                   </div>
                   <div className="d-flex justify-content-between">
                     <span className="text-secondary">Core Grace:</span>
-                    <span className="fw-semibold text-success">{pageData?.shift?.core_grace_minutes || 15} Minutes</span>
+                    <span className="fw-semibold text-primary">{pageData?.shift?.core_grace_minutes || 15} Minutes</span>
                   </div>
                 </>
               ) : (
@@ -783,7 +783,7 @@ export default function CheckInOutPage() {
                   </div>
                   <div className="d-flex justify-content-between">
                     <span className="text-secondary">Punctuality Grace:</span>
-                    <span className="fw-semibold text-success">{pageData?.shift?.grace_period_minutes} Minutes</span>
+                    <span className="fw-semibold text-primary">{pageData?.shift?.grace_period_minutes} Minutes</span>
                   </div>
                 </>
               )}

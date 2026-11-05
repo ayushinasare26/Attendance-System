@@ -288,7 +288,7 @@ export default function AdminSettingsPage() {
                     <label
                       className={`card h-100 p-3 rounded-4 border-2 transition-all cursor-pointer policy-card ${
                         globalPolicy === 'both'
-                          ? 'border-info bg-info bg-opacity-10'
+                          ? 'border-primary bg-primary bg-opacity-10'
                           : 'border-light-subtle bg-light'
                       }`}
                       style={{ cursor: 'pointer' }}
@@ -305,7 +305,7 @@ export default function AdminSettingsPage() {
                         />
                         <div>
                           <div className="fw-bold text-dark mb-1">
-                            <i className="bi bi-toggles text-info me-1"></i> Both (Employee Choice)
+                            <i className="bi bi-arrow-left-right text-primary me-1"></i> Both (Employee Choice)
                           </div>
                           <span className="text-muted small d-block">
                             Allows staff to freely choose between Face Recognition and Manual Attendance on the Employee Portal.
@@ -390,8 +390,8 @@ export default function AdminSettingsPage() {
                                     effective === 'face_only'
                                       ? 'bg-primary-subtle text-primary border border-primary-subtle'
                                       : effective === 'manual_only'
-                                      ? 'bg-success-subtle text-success border border-success-subtle'
-                                      : 'bg-info-subtle text-info border border-info-subtle'
+                                      ? 'bg-secondary-subtle text-secondary border border-secondary-subtle'
+                                      : 'bg-primary-subtle text-primary border border-primary-subtle'
                                   }`}
                                 >
                                   {effective === 'face_only' && (
@@ -406,13 +406,13 @@ export default function AdminSettingsPage() {
                                   )}
                                   {effective === 'both' && (
                                     <>
-                                      <i className="bi bi-toggles me-1"></i>Both Allowed
+                                      <i className="bi bi-check2 me-1"></i>Both Allowed
                                     </>
                                   )}
                                   {isInherited ? (
-                                    <span className="text-muted ms-1 fw-normal">(Inherited)</span>
+                                    <span className="ms-1 fw-normal">(Inherited)</span>
                                   ) : (
-                                    <span className="text-secondary ms-1 fw-semibold">(Override)</span>
+                                    <span className="ms-1 fw-semibold">(Override)</span>
                                   )}
                                 </span>
                               </td>

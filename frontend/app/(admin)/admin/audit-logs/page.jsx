@@ -68,17 +68,18 @@ export default function AdminAuditLogsPage() {
                       ) : l.actor_role === 'manager' ? (
                         <span className="badge bg-warning text-dark rounded-pill px-2 py-1">Manager</span>
                       ) : (
-                        <span className="badge bg-secondary rounded-pill px-2 py-1">Employee</span>
+                        <span className="badge badge-navy rounded-pill px-2 py-1">Employee</span>
                       )}
                     </td>
                     <td>
-                      <code className="fw-bold text-primary">{l.action}</code>
+                      <span className={`fw-bold small ${l.action.includes('LOG') ? 'text-primary' : 'text-dark'}`}>
+                        {l.action}
+                      </span>
                     </td>
                     <td>
-                      <span className="badge bg-light text-dark border">{l.resource_type}</span>
-                      {l.resource_id && (
-                        <span className="text-muted small ms-1">#{l.resource_id}</span>
-                      )}
+                      <span className="badge badge-royal rounded-3 px-2 py-1">
+                        {l.resource_type} {l.resource_id ? `#${l.resource_id}` : ''}
+                      </span>
                     </td>
                     <td className="text-secondary small">{l.details || '—'}</td>
                   </tr>

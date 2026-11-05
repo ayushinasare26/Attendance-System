@@ -35,11 +35,11 @@ export default function AdminLayout({ children }) {
     <div className="admin-wrapper" style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       <style jsx global>{`
         :root {
-          --admin-primary: #4f46e5;
-          --admin-primary-hover: #4338ca;
-          --admin-accent: #6366f1;
-          --admin-sidebar-bg: #0f172a;
-          --admin-sidebar-border: #1e293b;
+          --admin-primary: #1d4ed8;
+          --admin-primary-hover: #1e40af;
+          --admin-accent: #2563eb;
+          --admin-sidebar-bg: #0b1320;
+          --admin-sidebar-border: #152238;
         }
 
         body {
@@ -65,7 +65,7 @@ export default function AdminLayout({ children }) {
 
         .admin-sidebar .sidebar-logo {
           padding: 22px 20px;
-          border-bottom: 1px solid #1e293b;
+          border-bottom: 1px solid #152238;
         }
 
         .admin-sidebar-nav {
@@ -95,8 +95,8 @@ export default function AdminLayout({ children }) {
 
         .admin-nav-item.active {
           color: #ffffff;
-          background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-          box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+          background: #1d4ed8;
+          box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
           font-weight: 600;
         }
 
@@ -162,14 +162,14 @@ export default function AdminLayout({ children }) {
               style={{
                 width: '38px',
                 height: '38px',
-                background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
+                background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
                 borderRadius: '10px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
                 fontSize: '1.15rem',
-                boxShadow: '0 4px 10px rgba(99, 102, 241, 0.3)',
+                boxShadow: '0 4px 10px rgba(29, 78, 216, 0.3)',
               }}
             >
               <i className="bi bi-shield-lock-fill"></i>
@@ -211,18 +211,36 @@ export default function AdminLayout({ children }) {
           })}
         </nav>
 
-        <div className="p-3" style={{ borderTop: '1px solid #1e293b', background: 'rgba(0,0,0,0.15)' }}>
+        <div className="p-3" style={{ borderTop: '1px solid #152238', background: 'rgba(0,0,0,0.2)' }}>
           <div className="d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-2">
-              <div className="bg-primary rounded-circle" style={{ width: '8px', height: '8px' }}></div>
-              <span className="small text-light fw-medium">{adminName}</span>
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: '#1e293b',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: '0.78rem',
+                }}
+              >
+                AD
+              </div>
+              <div className="lh-1">
+                <div className="text-white small fw-semibold">{adminName}</div>
+                <div style={{ fontSize: '0.70rem', color: '#64748b', marginTop: '2px' }}>Security Officer</div>
+              </div>
             </div>
             <button
               onClick={() => logout('admin')}
-              className="text-danger bg-transparent border-0 p-0 text-decoration-none small fw-semibold"
+              className="text-secondary bg-transparent border-0 p-0 text-decoration-none"
               title="Sign out admin"
             >
-              <i className="bi bi-box-arrow-right fs-5"></i>
+              <i className="bi bi-box-arrow-right fs-5 text-secondary"></i>
             </button>
           </div>
         </div>

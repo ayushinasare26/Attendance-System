@@ -79,7 +79,7 @@ export default function EmployeeLoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #064e3b 0%, #065f46 40%, #0f172a 100%)',
+        background: 'radial-gradient(circle at 50% 50%, #0d2847 0%, #08162b 60%, #040c18 100%)',
         padding: '24px',
       }}
     >
@@ -88,26 +88,26 @@ export default function EmployeeLoginPage() {
         style={{
           width: '100%',
           maxWidth: '460px',
-          background: 'rgba(255, 255, 255, 0.96)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '20px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          padding: '40px 36px',
+          background: '#ffffff',
+          borderRadius: '24px',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.6)',
+          padding: '42px 38px',
         }}
       >
         <div className="text-center mb-4">
           <div
             className="logo-badge mx-auto mb-3"
             style={{
-              width: '52px',
-              height: '52px',
+              width: '54px',
+              height: '54px',
               fontSize: '1.6rem',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+              background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: '14px',
+              borderRadius: '16px',
               color: 'white',
+              boxShadow: '0 8px 20px rgba(29, 78, 216, 0.3)',
             }}
           >
             <i className="bi bi-geo-alt-fill"></i>
@@ -163,8 +163,8 @@ export default function EmployeeLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-success w-100 py-2 fw-semibold rounded-3 shadow-sm mb-3"
-            style={{ background: '#059669', borderColor: '#059669' }}
+            className="btn text-white w-100 py-2.5 fw-semibold rounded-3 shadow-sm mb-3"
+            style={{ background: '#0e1f38', borderColor: '#0e1f38' }}
           >
             {loading ? 'Signing In...' : 'Sign In to Employee Portal'}
           </button>
@@ -186,11 +186,16 @@ export default function EmployeeLoginPage() {
                   type="button"
                   onClick={() => handleDemoLogin(de.id)}
                   disabled={loading}
-                  className="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1"
-                  style={{ fontSize: '0.76rem' }}
+                  className="btn btn-sm rounded-pill px-3 py-1.5"
+                  style={{
+                    fontSize: '0.76rem',
+                    background: '#f8fafc',
+                    borderColor: '#e2e8f0',
+                    color: '#334155',
+                  }}
                   title={`${de.department_name} • ${de.site_name}`}
                 >
-                  <i className="bi bi-person-check me-1 text-success"></i>
+                  <i className="bi bi-person-check me-1 text-primary"></i>
                   {de.name} ({de.employee_code})
                 </button>
               ))}

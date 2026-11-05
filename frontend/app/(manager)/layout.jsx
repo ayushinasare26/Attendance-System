@@ -24,7 +24,7 @@ export default function ManagerLayout({ children }) {
         }
 
         .manager-navbar {
-          background: rgba(15, 23, 42, 0.96);
+          background: #0b1320;
           backdrop-filter: blur(12px);
           border-bottom: 2px solid #d97706;
           padding: 12px 20px;

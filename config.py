@@ -150,6 +150,11 @@ class Config:
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "geo-face-attendance-secret-2026")
     ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+    
+    # Google Sheets Integration
+    GOOGLE_SHEETS_SCRIPT_URL = os.environ.get(
+        "GOOGLE_SHEETS_SCRIPT_URL", ""
+    )
 
 for folder in [Config.DATASET_DIR, Config.EMBEDDINGS_DIR, Config.ATTENDANCE_PHOTOS_DIR]:
     try:

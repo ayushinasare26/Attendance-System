@@ -128,8 +128,7 @@ export default function CorrectionModal({ show, onHide, defaultDate = '', onSucc
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn btn-success rounded-pill px-4 fw-semibold"
-                  style={{ background: '#059669', borderColor: '#059669' }}
+                  className="btn btn-navy rounded-pill px-4 fw-semibold text-white"
                 >
                   {loading ? 'Submitting...' : 'Submit to Manager'}
                 </button>

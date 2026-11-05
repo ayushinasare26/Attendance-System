@@ -33,7 +33,7 @@ from core.shift_engine import (
     parse_time_str, resolve_site_tz
 )
 from config import Config, get_utc_now, get_utc_iso, get_local_now, format_local_timestamp, format_local_date
-
+from adapters.google_sheets import send_to_google_sheets
 @employee_bp.route("/login", methods=["GET", "POST"])
 def login():
     """
@@ -796,6 +796,33 @@ def _process_manual_attendance(event_type="check_in"):
         event_id,
         f"Manual {event_type.replace('_', ' ')} recorded at {timestamp_display}. Site: {assigned_site['name']}, Flagged: {is_flagged}"
     )
+    
+    # 8. Synchronize attendance with Google Sheets
+    try:
+        sheets_data = {
+            "id": str(emp["employee_code"] or emp["id"]),
+            "name": emp_name,
+            "date": local_now.date().isoformat(),
+            "event": "IN" if event_type == "check_in" else "OUT",
+            "timestamp": iso_timestamp
+        }
+
+        sheets_synced = send_to_google_sheets(sheets_data)
+
+        if sheets_synced:
+            print(
+                f"Google Sheets: {event_type} synced successfully "
+                f"for {emp_name}"
+            )
+        else:
+            print(
+                f"Google Sheets: {event_type} synchronization failed "
+                f"for {emp_name}"
+            )
+
+    except Exception as e:
+        print("Google Sheets synchronization error:", str(e))
+
 
     action_label = "check-in" if event_type == "check_in" else "check-out"
     return jsonify({

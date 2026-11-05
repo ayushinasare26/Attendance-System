@@ -418,16 +418,15 @@ export default function AdminEnrollPage() {
                 <button
                   id="saveInfoBtn"
                   type="submit"
-                  className="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm"
-                  style={{ background: 'var(--admin-primary)', borderColor: 'var(--admin-primary)' }}
+                  className="btn btn-navy rounded-pill px-4 fw-semibold shadow-sm"
                   disabled={step >= 2 || isSubmittingInfo}
                 >
-                  <i className="bi bi-save me-1"></i> 1. Save Info & Unlock Camera
+                  <i className="bi bi-person-badge me-1"></i> 1. Save Info & Unlock Camera
                 </button>
                 <button
                   id="startCaptureBtn"
                   type="button"
-                  className="btn btn-warning rounded-pill px-4 fw-semibold shadow-sm"
+                  className="btn btn-outline-secondary rounded-pill px-4 fw-semibold shadow-sm"
                   disabled={step !== 2 || isCapturing}
                   onClick={handleStartCapture}
                 >
@@ -437,7 +436,7 @@ export default function AdminEnrollPage() {
                   <Link
                     id="finishBtn"
                     href="/admin/employees"
-                    className="btn btn-success rounded-pill px-4 fw-semibold shadow-sm"
+                    className="btn btn-royal rounded-pill px-4 fw-semibold shadow-sm"
                   >
                     <i className="bi bi-check-lg me-1"></i> 3. Finish & View Employee Roster
                   </Link>

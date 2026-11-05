@@ -518,6 +518,19 @@ def run_attendance_pipeline(
     conn = get_db_connection()
     c = conn.cursor()
     iso_timestamp = get_utc_iso()
+    # Get the actual employee code for Google Sheets
+    c.execute(
+        "SELECT employee_code FROM employees WHERE id = ?",
+        (student_id,)
+    )
+
+    employee_row = c.fetchone()
+
+    employee_code = (
+        employee_row["employee_code"]
+        if employee_row
+        else str(student_id)
+    )
     try:
         # 1. Save to attendance_events table
         c.execute("""
@@ -604,6 +617,44 @@ def run_attendance_pipeline(
         }
     finally:
         conn.close()
+        
+    # ---------------- GOOGLE SHEETS SYNC ----------------
+    try:
+        from adapters.google_sheets import send_to_google_sheets
+
+        sheets_event = (
+            "IN" if event_type == "check_in" else "OUT"
+        )
+
+        attendance_data = {
+            "id": str(employee_code),
+            "name": student_name,
+            "date": format_local_date(iso_timestamp),
+            "event": sheets_event,
+            "timestamp": format_local_timestamp(iso_timestamp)
+        }
+
+        sheets_synced = send_to_google_sheets(attendance_data)
+
+        if sheets_synced:
+            record_stage(
+                "Google Sheets Sync",
+                "Completed",
+                f"{sheets_event} attendance synchronized successfully"
+            )
+        else:
+            record_stage(
+                "Google Sheets Sync",
+                "Failed",
+                "Attendance saved locally but Google Sheets sync failed"
+            )
+
+    except Exception as e:
+        record_stage(
+            "Google Sheets Sync",
+            "Failed",
+            f"Google Sheets integration error: {str(e)}"
+        )
 
     return {
         "success": True,

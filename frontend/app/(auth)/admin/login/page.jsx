@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #090d16 100%)',
+        background: 'radial-gradient(circle at 50% 50%, #0d2847 0%, #08162b 60%, #040c18 100%)',
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
@@ -58,11 +58,11 @@ export default function AdminLoginPage() {
     >
       <style jsx>{`
         .admin-card {
-          background: rgba(30, 41, 59, 0.85);
+          background: rgba(11, 19, 32, 0.95);
           backdrop-filter: blur(16px);
-          border: 1px solid rgba(99, 102, 241, 0.25);
+          border: 1px solid rgba(29, 78, 216, 0.25);
           border-radius: 20px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
           width: 100%;
           max-width: 440px;
           padding: 36px;
@@ -71,14 +71,14 @@ export default function AdminLoginPage() {
         .admin-badge {
           width: 60px;
           height: 60px;
-          background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+          background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
           border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 1.8rem;
           color: white;
-          box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+          box-shadow: 0 8px 24px rgba(29, 78, 216, 0.4);
           margin: 0 auto 20px auto;
         }
 
@@ -93,25 +93,25 @@ export default function AdminLoginPage() {
 
         .form-control-admin:focus {
           background: rgba(15, 23, 42, 0.95);
-          border-color: #6366f1;
+          border-color: #2563eb;
           color: white;
-          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
         }
 
         .btn-admin-primary {
-          background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+          background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
           border: none;
           color: white;
           font-weight: 600;
           padding: 12px;
           border-radius: 10px;
           transition: transform 0.15s ease, box-shadow 0.15s ease;
-          box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+          box-shadow: 0 4px 14px rgba(29, 78, 216, 0.4);
         }
 
         .btn-admin-primary:hover {
           transform: translateY(-1px);
-          box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+          box-shadow: 0 6px 20px rgba(29, 78, 216, 0.5);
           color: white;
         }
       `}</style>

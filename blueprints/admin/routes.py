@@ -37,7 +37,7 @@ from core.face_engine import (
 )
 from core.shift_engine import calculate_shift_hours
 from core.geotag import forward_geocode
-from config import Config, get_utc_now, get_local_now, format_local_timestamp
+from config import Config, get_utc_now, get_utc_iso, get_local_now, format_local_timestamp
 
 # ========================================================
 # 1. Admin Authentication
@@ -1265,8 +1265,9 @@ def update_employee_policy(emp_id):
 @login_required_admin
 def enroll_employee():
     """
-    Enrolls a new employee with explicit, timestamped biometric consent.
-    Compliance: Requires biometric consent checkbox before enrollment.
+    Enrolls a new employee with optional biometric consent & facial capture.
+    Allows administrators to register staff immediately; facial template capture
+    can either be performed during enrollment or completed later.
     """
     if request.method == "GET":
         conn = get_db_connection()
@@ -1292,83 +1293,96 @@ def enroll_employee():
             default_shift_id=default_shift_id
         )
 
-    data = request.form if request.form else (request.get_json() or {})
-    name = data.get("name", "").strip()
-    code = data.get("employee_code") or data.get("roll", "").strip()
-    email = data.get("email", "").strip()
-    dept_id = data.get("department_id") or None
-    site_id = data.get("site_id") or 1
-    shift_id = data.get("shift_id")
-    if not shift_id:
-        conn_t = get_db_connection()
-        def_row = conn_t.execute("SELECT value FROM settings WHERE key = 'company_default_shift_id'").fetchone()
-        conn_t.close()
-        shift_id = int(def_row["value"]) if def_row and def_row["value"] else 9
-    else:
-        shift_id = int(shift_id)
-
-    req_daily = data.get("required_daily_hours")
-    req_weekly = data.get("required_weekly_hours")
-    req_daily = float(req_daily) if req_daily not in (None, "") else None
-    req_weekly = float(req_weekly) if req_weekly not in (None, "") else None
-
-    mgr_id = data.get("manager_id") or None
-    role = data.get("role", "employee").strip()
-    
-    # Biometric Consent Verification (Required by DPDP / GDPR / BIPA scaffolding)
-    consent = data.get("biometric_consent") in ("1", "true", "on", True)
-    if not consent:
-        msg = "Biometric Consent Required: An explicit informed consent record must be confirmed before enrolling facial biometric templates."
-        if request.is_json:
-            return jsonify({"success": False, "error": msg}), 400
-        flash(msg, "danger")
-        return redirect(url_for("admin.enroll_employee"))
-
-    if not name or not code:
-        if request.is_json:
-            return jsonify({"success": False, "error": "Employee Name and Code/ID are required."}), 400
-        flash("Employee Name and Code/ID are required.", "danger")
-        return redirect(url_for("admin.enroll_employee"))
-
-    from werkzeug.security import generate_password_hash
-    pw_hash = generate_password_hash("employee123")
-    now = get_utc_iso()
-
-    conn = get_db_connection()
-    c = conn.cursor()
     try:
-        # Insert into employees table
-        c.execute("""
-            INSERT INTO employees (
-                name, employee_code, department_id, site_id, shift_id, manager_id,
-                role, email, password_hash, active, biometric_consent,
-                biometric_consent_timestamp, created_at,
-                required_daily_hours, required_weekly_hours
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?)
-        """, (name, code, dept_id, site_id, shift_id, mgr_id, role, email, pw_hash, now, now, req_daily, req_weekly))
-        eid = c.lastrowid
+        data = request.form if request.form else (request.get_json() or {})
+        name = data.get("name", "").strip()
+        code = data.get("employee_code") or data.get("roll", "").strip()
+        email = data.get("email", "").strip()
+        dept_id = data.get("department_id") or None
+        site_id = data.get("site_id") or 1
+        shift_id = data.get("shift_id")
+        if not shift_id:
+            conn_t = get_db_connection()
+            def_row = conn_t.execute("SELECT value FROM settings WHERE key = 'company_default_shift_id'").fetchone()
+            conn_t.close()
+            shift_id = int(def_row["value"]) if def_row and def_row["value"] else 9
+        else:
+            shift_id = int(shift_id)
 
-        # Keep legacy students table synchronized
-        c.execute("""
-            INSERT OR REPLACE INTO students (
-                id, name, roll, class, email, password_hash, role,
-                department_id, site_id, shift_id, manager_id, active,
-                biometric_consent, biometric_consent_timestamp, created_at,
-                required_daily_hours, required_weekly_hours
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?)
-        """, (eid, name, code, f"Dept-{dept_id}", email, pw_hash, role, dept_id, site_id, shift_id, mgr_id, now, now, req_daily, req_weekly))
+        req_daily = data.get("required_daily_hours")
+        req_weekly = data.get("required_weekly_hours")
+        req_daily = float(req_daily) if req_daily not in (None, "") else None
+        req_weekly = float(req_weekly) if req_weekly not in (None, "") else None
 
-        conn.commit()
+        mgr_id = data.get("manager_id") or None
+        role = data.get("role", "employee").strip()
+
+        # Biometric Consent Verification (Optional for enrollment; recorded if granted)
+        consent = data.get("biometric_consent") in ("1", "true", "on", True)
+        has_consent = 1 if consent else 0
+
+        if not name or not code:
+            if request.is_json or getattr(g, "json_mode", False):
+                return jsonify({"success": False, "error": "Employee Name and Code/ID are required."}), 400
+            flash("Employee Name and Code/ID are required.", "danger")
+            return redirect(url_for("admin.enroll_employee"))
+
+        from werkzeug.security import generate_password_hash
+        pw_hash = generate_password_hash("employee123")
+        now = get_utc_iso()
+        consent_timestamp = now if has_consent else None
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        try:
+            # Insert into employees table
+            c.execute("""
+                INSERT INTO employees (
+                    name, employee_code, department_id, site_id, shift_id, manager_id,
+                    role, email, password_hash, active, biometric_consent,
+                    biometric_consent_timestamp, created_at,
+                    required_daily_hours, required_weekly_hours
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
+            """, (name, code, dept_id, site_id, shift_id, mgr_id, role, email, pw_hash, has_consent, consent_timestamp, now, req_daily, req_weekly))
+            eid = c.lastrowid
+
+            # Keep legacy students table synchronized
+            c.execute("""
+                INSERT OR REPLACE INTO students (
+                    id, name, roll, class, email, password_hash, role,
+                    department_id, site_id, shift_id, manager_id, active,
+                    biometric_consent, biometric_consent_timestamp, created_at,
+                    required_daily_hours, required_weekly_hours
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
+            """, (eid, name, code, f"Dept-{dept_id}", email, pw_hash, role, dept_id, site_id, shift_id, mgr_id, has_consent, consent_timestamp, now, req_daily, req_weekly))
+
+            conn.commit()
+        except Exception as db_err:
+            conn.rollback()
+            conn.close()
+            return jsonify({"success": False, "error": f"Database enrollment error: {str(db_err)}"}), 400
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+        os.makedirs(os.path.join(Config.DATASET_DIR, str(eid)), exist_ok=True)
+        audit_note = f"Enrolled {name} ({code})" + (" with biometric consent" if has_consent else " (biometric capture optional/pending)")
+        log_audit(session.get("admin_id"), "admin", "ENROLL_EMPLOYEE", "employee", eid, audit_note)
+
+        return jsonify({
+            "success": True,
+            "employee_id": eid,
+            "student_id": eid,
+            "name": name,
+            "biometric_consent": bool(has_consent),
+            "message": f"Employee {name} enrolled successfully."
+        })
     except Exception as e:
-        conn.close()
-        return jsonify({"success": False, "error": f"Database enrollment error: {str(e)}"}), 400
-    finally:
-        conn.close()
-
-    os.makedirs(os.path.join(Config.DATASET_DIR, str(eid)), exist_ok=True)
-    log_audit(session.get("admin_id"), "admin", "ENROLL_EMPLOYEE", "employee", eid, f"Enrolled {name} with biometric consent")
-
-    return jsonify({"success": True, "employee_id": eid, "student_id": eid, "name": name})
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": f"Enrollment error: {str(e)}"}), 500
 
 @admin_bp.route("/employees/<int:emp_id>/toggle-active", methods=["POST"])
 @login_required_admin

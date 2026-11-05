@@ -68,7 +68,7 @@ export default function AdminEnrollPage() {
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureProgress, setCaptureProgress] = useState(0); // 0 to 6
   const [anglePrompt, setAnglePrompt] = useState(
-    'Ready. Fill form, check biometric consent, then click "Save Info".'
+    'Ready. Fill employee details. Face biometric capture is optional.'
   );
   const [isIndexingDone, setIsIndexingDone] = useState(false);
 
@@ -91,8 +91,12 @@ export default function AdminEnrollPage() {
 
   const handleSaveInfo = async (e) => {
     e.preventDefault();
+    if (!formData.name.trim() || !formData.employee_code.trim()) {
+      alert('Full Name and Employee Code / ID are required.');
+      return;
+    }
     if (!formData.biometric_consent) {
-      alert('Explicit biometric consent is required before enrolling face data.');
+      alert('To capture facial templates, please check the Biometric Consent box above. Alternatively, click "Save & Finish (Skip Face Capture)" to register without face.');
       return;
     }
 
@@ -151,6 +155,54 @@ export default function AdminEnrollPage() {
     } finally {
       setIsSubmittingInfo(false);
     }
+  };
+
+  const handleSaveWithoutFace = async () => {
+    if (!formData.name.trim() || !formData.employee_code.trim()) {
+      alert('Full Name and Employee Code / ID are required.');
+      return;
+    }
+
+    setIsSubmittingInfo(true);
+    setFeedback(null);
+
+    try {
+      const payload = {
+        name: formData.name.trim(),
+        employee_code: formData.employee_code.trim(),
+        role: formData.role,
+        email: formData.email.trim(),
+        department_id: formData.department_id,
+        site_id: formData.site_id,
+        shift_id: formData.shift_id,
+        manager_id: formData.manager_id || null,
+        biometric_consent: formData.biometric_consent ? '1' : '0',
+      };
+
+      const res = await api.post('/admin/enroll', payload);
+      if (res && res.success) {
+        setFeedback({
+          type: 'success',
+          message: `Employee <strong>${res.name || formData.name}</strong> enrolled successfully without face capture! Redirecting to roster...`,
+        });
+        setTimeout(() => {
+          router.push('/admin/employees');
+        }, 1200);
+      } else {
+        alert(res?.error || 'Enrollment failed.');
+      }
+    } catch (err) {
+      alert(`Server error: ${err.data?.error || err.message}`);
+    } finally {
+      setIsSubmittingInfo(false);
+    }
+  };
+
+  const handleSkipFaceAfterUnlock = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+    }
+    router.push('/admin/employees');
   };
 
   const handleStartCapture = async () => {
@@ -251,7 +303,7 @@ export default function AdminEnrollPage() {
                   className={`${step >= 2 ? 'fw-bold small text-dark' : 'fw-semibold small text-muted'}`}
                   id="step2Label"
                 >
-                  Multi-Angle Capture
+                  Multi-Angle Capture <span className="text-muted fw-normal">(Optional)</span>
                 </span>
               </div>
               <div className="d-none d-sm-block text-muted">&bull; &bull; &bull;</div>
@@ -392,7 +444,7 @@ export default function AdminEnrollPage() {
                 </div>
               </div>
 
-              {/* Mandatory Biometric Consent Checkbox */}
+              {/* Biometric Consent Checkbox (Optional if skipping face capture) */}
               <div className="p-3 bg-light rounded-3 border mb-4">
                 <div className="form-check">
                   <input
@@ -402,36 +454,64 @@ export default function AdminEnrollPage() {
                     id="biometricConsentCheckbox"
                     checked={formData.biometric_consent}
                     onChange={handleInputChange}
-                    required
                     disabled={step >= 2}
                   />
-                  <label className="form-check-label small fw-bold text-dark" htmlFor="biometricConsentCheckbox">
-                    Explicit Biometric Consent Acknowledged & Granted *
+                  <label className="form-check-label small fw-bold text-dark d-flex align-items-center gap-2" htmlFor="biometricConsentCheckbox">
+                    <span>Explicit Biometric Consent (Facial Recognition)</span>
+                    <span className="badge bg-secondary-subtle text-secondary border fw-normal" style={{ fontSize: '0.7rem' }}>Optional</span>
                   </label>
                   <div className="text-muted small mt-1" style={{ fontSize: '0.76rem' }}>
-                    I certify that the employee has provided explicit, informed consent for the capture of facial reference imagery and generation of 128-dimensional biometric mathematical template vectors solely for workforce attendance verification, in compliance with GDPR Art. 9, India DPDP Act, and organizational data privacy standards.
+                    Check this if capturing facial reference imagery today. Facial capture is <strong>optional</strong> — you can enroll employee details right away without a camera, and staff can use manual attendance or enroll their facial template at any time later.
                   </div>
                 </div>
               </div>
 
               <div className="d-flex flex-wrap gap-2 mb-4">
-                <button
-                  id="saveInfoBtn"
-                  type="submit"
-                  className="btn btn-navy rounded-pill px-4 fw-semibold shadow-sm"
-                  disabled={step >= 2 || isSubmittingInfo}
-                >
-                  <i className="bi bi-person-badge me-1"></i> 1. Save Info & Unlock Camera
-                </button>
-                <button
-                  id="startCaptureBtn"
-                  type="button"
-                  className="btn btn-outline-secondary rounded-pill px-4 fw-semibold shadow-sm"
-                  disabled={step !== 2 || isCapturing}
-                  onClick={handleStartCapture}
-                >
-                  <i className="bi bi-camera me-1"></i> 2. Capture Reference Angles
-                </button>
+                {step === 1 && (
+                  <>
+                    <button
+                      id="saveInfoBtn"
+                      type="submit"
+                      className="btn btn-navy rounded-pill px-4 fw-semibold shadow-sm"
+                      disabled={isSubmittingInfo}
+                    >
+                      <i className="bi bi-camera me-1"></i> 1. Save Info & Unlock Camera
+                    </button>
+                    <button
+                      id="skipFaceBtn"
+                      type="button"
+                      onClick={handleSaveWithoutFace}
+                      className="btn btn-outline-primary rounded-pill px-4 fw-semibold shadow-sm bg-white"
+                      disabled={isSubmittingInfo}
+                    >
+                      <i className="bi bi-person-check me-1"></i> Save & Finish (Skip Face Capture)
+                    </button>
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    <button
+                      id="startCaptureBtn"
+                      type="button"
+                      className="btn btn-royal rounded-pill px-4 fw-semibold shadow-sm"
+                      disabled={isCapturing}
+                      onClick={handleStartCapture}
+                    >
+                      <i className="bi bi-camera-fill me-1"></i> 2. Capture Reference Angles
+                    </button>
+                    <button
+                      id="skipAfterUnlockBtn"
+                      type="button"
+                      onClick={handleSkipFaceAfterUnlock}
+                      className="btn btn-outline-secondary rounded-pill px-4 fw-semibold shadow-sm bg-white"
+                      disabled={isCapturing}
+                    >
+                      <i className="bi bi-x-circle me-1"></i> Skip Camera & Finish Later
+                    </button>
+                  </>
+                )}
+
                 {isIndexingDone && (
                   <Link
                     id="finishBtn"

@@ -273,16 +273,9 @@ def match_face_embedding(target_embedding, match_threshold=None, review_threshol
             "reason": f"Ambiguous face match between {best['name']} and {second_best['name']} (margin too close: {margin:.3f}). Please move closer and align your face."
         }
 
-    # If distance is <= 0.38, it is a very strong verified match
-    if best_distance <= 0.38:
-        status = "success"
-        reason = None
-    elif best_distance > review_threshold or margin < 0.05:
-        status = "flagged"
-        reason = f"Borderline match confidence ({round(confidence*100, 1)}%) — flagged for admin review"
-    else:
-        status = "success"
-        reason = None
+    # Distance <= match_threshold is an accepted match
+    status = "success"
+    reason = None
 
     matched_id = best["student_id"]
     matched_name = best["name"]

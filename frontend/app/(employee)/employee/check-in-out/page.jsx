@@ -488,17 +488,6 @@ export default function CheckInOutPage() {
                 </div>
               </div>
 
-              {/* Geofence Warning Banner */}
-              {warningMessage && (
-                <div
-                  id="geofenceWarningBanner"
-                  className="alert alert-warning border-0 rounded-3 shadow-sm py-2 px-3 small d-flex align-items-center gap-2 mb-3"
-                >
-                  <i className="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
-                  <div id="geofenceWarningText">{warningMessage}</div>
-                </div>
-              )}
-
               {/* Camera Container */}
               <div className="d-flex justify-content-center w-100 my-3">
                 <div
@@ -625,10 +614,6 @@ export default function CheckInOutPage() {
                   >
                     {isCheckOut ? 'Check Out' : 'Check In'}
                   </span>
-                  {' '}• Site Radius: <strong>{pageData?.site?.geofence_radius_meters ? Math.round(pageData.site.geofence_radius_meters) : 100}m</strong>
-                  {!pageData?.site?.geofencing_enabled && (
-                    <span className="badge bg-info-subtle text-info ms-1">No Geofence Required</span>
-                  )}
                 </span>
               </div>
             </div>
@@ -827,12 +812,10 @@ export default function CheckInOutPage() {
                               ? 'bg-success-subtle text-success'
                               : ev.status === 'late'
                               ? 'bg-warning-subtle text-warning'
-                              : ev.status === 'flagged'
-                              ? 'bg-danger-subtle text-danger'
                               : 'bg-primary-subtle text-primary'
                           }`}
                         >
-                          {ev.status.toUpperCase()}
+                          {ev.status === 'flagged' ? 'RECORDED' : ev.status.toUpperCase()}
                         </span>
                       </div>
                       <div className="text-muted small">{ev.time_display}</div>
@@ -840,9 +823,6 @@ export default function CheckInOutPage() {
                         <div className="text-secondary small mt-1" style={{ fontSize: '0.72rem' }}>
                           <i className="bi bi-compass me-1"></i>
                           {Math.round(ev.distance_from_site_meters)}m from site
-                          {!ev.within_geofence && (
-                            <span className="text-danger fw-bold ms-1">(Outside Geofence)</span>
-                          )}
                         </div>
                       )}
                     </div>

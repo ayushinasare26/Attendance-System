@@ -239,7 +239,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <h3 className="fw-bold text-danger mb-0">{isDashLoading ? '—' : flaggedCount}</h3>
-            <span className="text-danger small">Geofence violations or audit flags</span>
+            <span className="text-danger small">Check-in/out location mismatches</span>
           </div>
         </div>
       </div>
@@ -351,14 +351,7 @@ export default function AdminDashboardPage() {
                       <td>{r.site}</td>
                       <td>
                         {r.distance_meters !== null && r.distance_meters !== undefined ? (
-                          <>
-                            <span>{Math.round(r.distance_meters)}m</span>
-                            {r.within_geofence ? (
-                              <span className="badge bg-success-subtle text-success ms-1">Within Radius</span>
-                            ) : (
-                              <span className="badge bg-danger text-white ms-1">Outside Geofence</span>
-                            )}
-                          </>
+                          <span>{Math.round(r.distance_meters)}m</span>
                         ) : (
                           <span className="text-muted">No GPS</span>
                         )}

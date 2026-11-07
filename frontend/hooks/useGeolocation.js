@@ -46,37 +46,18 @@ export function useGeolocation(siteCoords, currentAction = 'check_in') {
         const accuracyThreshold = 100;
         if (accMeters > accuracyThreshold) {
           setStatus('poor_accuracy');
-          setWarningMessage(
-            `Low GPS Accuracy Warning (±${accMeters}m): Location accuracy is lower than normal (>100m). Your attendance will be flagged for review. For best accuracy, please move near a window, enable precise location, or use a mobile device.`
-          );
         } else {
           setStatus('ready');
-          if (siteCoords && siteCoords.enabled && dist !== null) {
-            const radius = siteCoords.radius || 100;
-            const actionText = currentAction.replace('_', ' ');
-            if (dist - accMeters > radius) {
-              setWarningMessage(
-                `Location Warning: You appear to be ${dist}m from your registered office (${radius}m allowed, accuracy ±${accMeters}m). This ${actionText} will be flagged for administrative audit.`
-              );
-            } else if (dist > radius && dist - accMeters <= radius) {
-              setWarningMessage(
-                `Uncertain Geofence: You are ${dist}m from office, but your accuracy circle (±${accMeters}m) overlaps the allowed ${radius}m boundary. This event will be marked as uncertain for review.`
-              );
-            } else {
-              setWarningMessage(null);
-            }
-          } else {
-            setWarningMessage(null);
-          }
         }
+        setWarningMessage(null);
       },
       (err) => {
         let errType = 'error';
-        let errMsg = 'GPS coordinates unavailable. Check-in outside geofence will be flagged for review.';
+        let errMsg = 'GPS coordinates unavailable.';
 
         if (err.code === 1 || err.code === err.PERMISSION_DENIED) {
           errType = 'permission_denied';
-          errMsg = 'Location permission denied. Please allow location permissions in your browser or device settings to verify attendance.';
+          errMsg = 'Location permission denied. Please allow location access in your browser or device settings.';
         } else if (err.code === 2 || err.code === err.POSITION_UNAVAILABLE) {
           errType = 'position_unavailable';
           errMsg = 'GPS position unavailable. Please ensure location services are enabled on your device.';
@@ -92,9 +73,7 @@ export function useGeolocation(siteCoords, currentAction = 'check_in') {
           gps_error: errType,
         });
         setStatus(errType);
-        if (siteCoords && siteCoords.enabled) {
-          setWarningMessage(errMsg);
-        }
+        setWarningMessage(errMsg);
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );

@@ -243,15 +243,13 @@ function AdminAttendanceContent() {
                     </td>
                     <td>{r.site_name || 'Headquarters'}</td>
                     <td>
-                      {r.distance_from_site_meters != null ? (
-                        <>
-                          <span>{Math.round(r.distance_from_site_meters)}m</span>
-                          {r.within_geofence ? (
-                            <span className="badge bg-success-subtle text-success ms-1">Within Radius</span>
-                          ) : (
-                            <span className="badge bg-danger text-white ms-1">Outside Geofence</span>
-                          )}
-                        </>
+                      {r.checkin_checkout_distance_meters != null ? (
+                        <div className="text-danger fw-semibold small">
+                          <i className="bi bi-geo-alt-fill me-1"></i>
+                          Diff: {Math.round(r.checkin_checkout_distance_meters)}m
+                        </div>
+                      ) : r.distance_from_site_meters != null ? (
+                        <span>{Math.round(r.distance_from_site_meters)}m</span>
                       ) : (
                         <span className="text-muted small">No GPS</span>
                       )}

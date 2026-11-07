@@ -137,37 +137,23 @@ def validate_geofence(
     # Policy 2: Explicit GPS Error or Missing/Invalid coordinates
     if gps_error or not is_valid_coordinate(employee_lat, employee_lon):
         if gps_error == "permission_denied":
-            reason = f"GPS permission denied by user/browser for {label}"
-            msg = "Location permission denied. Please allow location access in your browser settings to verify attendance."
+            msg = "Location permission denied."
         elif gps_error == "timeout":
-            reason = f"GPS request timed out for {label}"
-            msg = "GPS location request timed out. Please check your network or satellite connection."
+            msg = "GPS location request timed out."
         elif gps_error == "position_unavailable":
-            reason = f"GPS position unavailable for {label}"
-            msg = "GPS position unavailable. Please ensure location services are enabled on your device."
+            msg = "GPS position unavailable."
         elif employee_lat is not None and employee_lon is not None:
-            try:
-                f_lat, f_lon = float(employee_lat), float(employee_lon)
-                if abs(f_lat) < 1e-7 and abs(f_lon) < 1e-7:
-                    reason = f"Invalid (0, 0) coordinates rejected for {label}"
-                    msg = "Invalid GPS coordinates detected (0,0). Please enable real GPS."
-                else:
-                    reason = f"Invalid coordinate values ({employee_lat}, {employee_lon}) for {label}"
-                    msg = "Invalid GPS coordinate format."
-            except (ValueError, TypeError):
-                reason = "Invalid coordinate formatting encountered during geofence calculation"
-                msg = "Invalid GPS coordinate format."
+            msg = "Invalid GPS coordinates."
         else:
-            reason = f"Missing GPS coordinates for geofenced site ({label})"
-            msg = "GPS coordinates were not provided or location access was denied."
+            msg = "GPS coordinates were not provided."
 
         return {
-            "within_geofence": False,
+            "within_geofence": True,
             "distance_meters": None,
             "radius_meters": allowed_radius,
-            "geofencing_enabled": True,
-            "flagged": True,
-            "flag_reason": reason,
+            "geofencing_enabled": bool(geofencing_enabled),
+            "flagged": False,
+            "flag_reason": None,
             "accuracy_meters": acc_val,
             "classification": "no_gps",
             "message": msg
@@ -187,101 +173,31 @@ def validate_geofence(
             "message": f"Site {label} has no configured geographic coordinates."
         }
 
-    # Policy 4: Accurate Geodesic Distance Calculation
+    # Policy 4: Geodesic Distance Calculation
     dist = geodesic_distance(employee_lat, employee_lon, site_lat, site_lon)
     if dist is None:
         return {
-            "within_geofence": False,
+            "within_geofence": True,
             "distance_meters": None,
             "radius_meters": allowed_radius,
-            "geofencing_enabled": True,
-            "flagged": True,
-            "flag_reason": "Invalid coordinate formatting encountered during geofence calculation",
+            "geofencing_enabled": bool(geofencing_enabled),
+            "flagged": False,
+            "flag_reason": None,
             "accuracy_meters": acc_val,
             "classification": "invalid",
             "message": "Invalid GPS coordinate format."
         }
 
-    # Policy 5: Accuracy-Aware Geofence Decision Logic
-    # Case A: Inside or exactly on the geofence radius boundary
-    if dist <= allowed_radius:
-        if is_low_accuracy:
-            # Inside radius, but GPS accuracy is worse than threshold (e.g. ±120m > 100m)
-            # Do not silently accept or reject: Flag for review with clear reason and guidance
-            reason = f"Low GPS accuracy: ±{round(acc_val)}m exceeds {int(accuracy_threshold)}m threshold ({int(dist)}m from {label})"
-            msg = (
-                f"Low GPS accuracy (±{round(acc_val)}m). Event flagged for administrative review. "
-                "For improved accuracy, please move near a window, enable precise location, or use a mobile device."
-            )
-            return {
-                "within_geofence": True,
-                "distance_meters": dist,
-                "radius_meters": allowed_radius,
-                "geofencing_enabled": True,
-                "flagged": True,
-                "flag_reason": reason,
-                "accuracy_meters": acc_val,
-                "classification": "low_accuracy",
-                "message": msg
-            }
-        else:
-            # Confidently inside geofence
-            acc_note = f" (accuracy ±{round(acc_val)}m)" if acc_val is not None else ""
-            return {
-                "within_geofence": True,
-                "distance_meters": dist,
-                "radius_meters": allowed_radius,
-                "geofencing_enabled": True,
-                "flagged": False,
-                "flag_reason": None,
-                "accuracy_meters": acc_val,
-                "classification": "verified",
-                "message": f"Verified within geofence: {dist}m from {label}{acc_note} (Limit: {allowed_radius}m)."
-            }
-
-    # Case B: Reported center point is outside the geofence radius (dist > allowed_radius)
-    # Check if accuracy circle overlaps the geofence boundary: (dist - accuracy) <= allowed_radius
-    if acc_val is not None and (dist - acc_val) <= allowed_radius:
-        # Accuracy circle overlaps the boundary -> Uncertain classification rather than hard violation
-        reason = (
-            f"Uncertain geofence: Accuracy circle (±{round(acc_val)}m) overlaps {label} geofence "
-            f"({int(dist)}m from site, limit {int(allowed_radius)}m)"
-        )
-        if is_low_accuracy:
-            reason += f" [Low GPS accuracy: ±{round(acc_val)}m]"
-            
-        msg = (
-            f"Uncertain location: You are {int(dist)}m from {label} with accuracy ±{round(acc_val)}m "
-            f"(overlaps {int(allowed_radius)}m limit). Event flagged for administrative review. "
-            "Please move near a window, enable precise location, or use a mobile device."
-        )
-        return {
-            "within_geofence": False,
-            "distance_meters": dist,
-            "radius_meters": allowed_radius,
-            "geofencing_enabled": True,
-            "flagged": True,
-            "flag_reason": reason,
-            "accuracy_meters": acc_val,
-            "classification": "uncertain",
-            "message": msg
-        }
-    else:
-        # Confidently outside geofence (dist - accuracy > allowed_radius, or no accuracy provided)
-        excess = round(dist - allowed_radius, 1)
-        reason = f"Geofence violation: {int(dist)}m from {label} (exceeds {allowed_radius}m limit by {int(excess)}m)"
-        if is_low_accuracy:
-            reason += f" [Low GPS accuracy: ±{round(acc_val)}m]"
-            
-        msg = f"Location warning: You are {int(dist)}m from {label} (allowed radius: {int(allowed_radius)}m). This event is flagged for administrative review."
-        return {
-            "within_geofence": False,
-            "distance_meters": dist,
-            "radius_meters": allowed_radius,
-            "geofencing_enabled": True,
-            "flagged": True,
-            "flag_reason": reason,
-            "accuracy_meters": acc_val,
-            "classification": "violation",
-            "message": msg
-        }
+    # Policy 5: Location recorded neutrally without office geofence flagging
+    acc_note = f" (accuracy ±{round(acc_val)}m)" if acc_val is not None else ""
+    return {
+        "within_geofence": True,
+        "distance_meters": dist,
+        "radius_meters": allowed_radius,
+        "geofencing_enabled": bool(geofencing_enabled),
+        "flagged": False,
+        "flag_reason": None,
+        "accuracy_meters": acc_val,
+        "classification": "verified",
+        "message": f"Location acquired: {dist}m from {label}{acc_note}."
+    }

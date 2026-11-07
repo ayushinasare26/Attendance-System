@@ -130,7 +130,8 @@ def init_db(db_path=None):
         ("flagged", "INTEGER DEFAULT 0"),
         ("flag_reason", "TEXT"),
         ("attendance_method", "TEXT DEFAULT 'face'"),
-        ("accuracy_meters", "REAL")
+        ("accuracy_meters", "REAL"),
+        ("checkin_checkout_distance_meters", "REAL")
     ]
     for col_name, col_type in att_col_defs:
         if col_name not in existing_att_cols:
@@ -394,6 +395,11 @@ def init_db(db_path=None):
             c.execute("ALTER TABLE attendance_events ADD COLUMN accuracy_meters REAL")
         except Exception:
             pass
+    if "checkin_checkout_distance_meters" not in existing_event_cols:
+        try:
+            c.execute("ALTER TABLE attendance_events ADD COLUMN checkin_checkout_distance_meters REAL")
+        except Exception:
+            pass
 
     # Geocode cache table for persistent reverse geocoding
     c.execute("""
@@ -456,7 +462,8 @@ def init_db(db_path=None):
         "review_threshold": str(Config.REVIEW_THRESHOLD),
         "duplicate_cooldown_seconds": str(Config.DUPLICATE_COOLDOWN_SECONDS),
         "geocoding_provider": Config.GEOCODING_PROVIDER,
-        "global_attendance_policy": "both"
+        "global_attendance_policy": "both",
+        "location_match_radius_meters": str(Config.LOCATION_MATCH_RADIUS_METERS)
     }
     for k, v in default_settings.items():
         c.execute("""

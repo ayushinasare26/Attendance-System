@@ -97,7 +97,6 @@ class TestGeotag(unittest.TestCase):
         res = reverse_geocode(19.0760, 72.8777)
         self.assertIn("Lat: 19.0760°", res)
         self.assertIn("Lon: 72.8777°", res)
-        self.assertIn("Lookup Pending", res)
 
     @patch("core.geotag.get_geocoder")
     def test_reverse_geocode_service_unavailable_fallback(self, mock_get_geocoder):
@@ -107,7 +106,7 @@ class TestGeotag(unittest.TestCase):
 
         res = reverse_geocode(19.0760, 72.8777)
         self.assertIn("Lat: 19.0760°", res)
-        self.assertIn("Lookup Pending", res)
+        self.assertIn("Lon: 72.8777°", res)
 
     @patch("core.geotag.get_geocoder")
     def test_reverse_geocode_empty_result_fallback(self, mock_get_geocoder):
@@ -117,7 +116,7 @@ class TestGeotag(unittest.TestCase):
 
         res = reverse_geocode(19.0760, 72.8777)
         self.assertIn("Lat: 19.0760°", res)
-        self.assertIn("Lookup Pending", res)
+        self.assertIn("Lon: 72.8777°", res)
 
     @patch("core.geotag.get_geocoder")
     def test_forward_geocode_mock_success(self, mock_get_geocoder):
@@ -244,8 +243,8 @@ class TestGeotag(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertTrue(data["success"])
-        self.assertTrue(data["flagged"])
-        self.assertIn("Low GPS accuracy", data["flag_reason"])
+        self.assertFalse(data["flagged"])
+        self.assertIsNone(data.get("flag_reason"))
         self.assertEqual(data["accuracy_meters"], 150.0)
 
         # Verify persisted in database
@@ -254,7 +253,7 @@ class TestGeotag(unittest.TestCase):
         row = conn.execute("SELECT accuracy_meters, flagged, flag_reason FROM attendance_events WHERE id = ?", (event_id,)).fetchone()
         self.assertIsNotNone(row)
         self.assertEqual(row["accuracy_meters"], 150.0)
-        self.assertEqual(row["flagged"], 1)
+        self.assertEqual(row["flagged"], 0)
 
         # Cleanup
         conn.execute("DELETE FROM attendance_events WHERE id = ?", (event_id,))

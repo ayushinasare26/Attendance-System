@@ -73,21 +73,19 @@ class TestShiftEngine(unittest.TestCase):
         self.assertEqual(res["status"], "overtime")
 
     def test_checkout_before_checkin_edge_case(self):
-        """Check-out timestamp earlier than check-in must be flagged as invalid sequence."""
+        """Check-out timestamp earlier than check-in returns invalid sequence without flagging event."""
         check_in = "2026-09-29T14:00:00"
         check_out = "2026-09-29T09:00:00"
         res = calculate_shift_hours(check_in, check_out, self.shift)
         self.assertEqual(res["status"], "invalid_sequence")
-        self.assertTrue(res["flagged"])
-        self.assertIn("Corrupted sequence", res["flag_reason"])
+        self.assertFalse(res["flagged"])
 
     def test_missing_checkout_edge_case(self):
-        """Check-in without corresponding check-out must return missing_checkout."""
+        """Check-in without corresponding check-out must return missing_checkout without flagging event."""
         check_in = "2026-09-29T09:00:00"
         res = calculate_shift_hours(check_in, None, self.shift)
         self.assertEqual(res["status"], "missing_checkout")
-        self.assertTrue(res["flagged"])
-        self.assertIn("missing", res["flag_reason"].lower())
+        self.assertFalse(res["flagged"])
 
     def test_break_deduction(self):
         """Shift of 8 hours gross should have 1 hour break deducted -> 7 net hours."""

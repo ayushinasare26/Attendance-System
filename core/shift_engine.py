@@ -106,7 +106,7 @@ def evaluate_check_in(
             "scheduled_start": scheduled_start.strftime("%I:%M %p"),
             "grace_limit": grace_limit.strftime("%I:%M %p"),
             "flagged": False,  # Late is a punctuality status, not necessarily a security flag
-            "flag_reason": reason,
+            "flag_reason": None,
             "message": f"Late check-in by {int(minutes_late)} minutes"
         }
 
@@ -161,7 +161,7 @@ def evaluate_check_out(
                 "minutes_overtime": 0.0,
                 "scheduled_end": scheduled_end.strftime("%I:%M %p"),
                 "flagged": False,
-                "flag_reason": f"Early leave: {int(minutes_early)}m before scheduled end ({scheduled_end.strftime('%I:%M %p')})",
+                "flag_reason": None,
                 "message": f"Early departure by {int(minutes_early)} minutes"
             }
         else:
@@ -244,8 +244,8 @@ def calculate_shift_hours(
             "regular_hours": 0.0,
             "overtime_hours": 0.0,
             "check_in_status": in_eval["status"],
-            "flagged": True,
-            "flag_reason": "Incomplete attendance: Checked in but check-out timestamp is missing",
+            "flagged": False,
+            "flag_reason": None,
             "is_active_shift": False
         }
 
@@ -256,8 +256,8 @@ def calculate_shift_hours(
             "net_hours": 0.0,
             "regular_hours": 0.0,
             "overtime_hours": 0.0,
-            "flagged": True,
-            "flag_reason": "Incomplete attendance: Check-out recorded without matching check-in"
+            "flagged": False,
+            "flag_reason": None
         }
 
     # Normalize both
@@ -271,8 +271,8 @@ def calculate_shift_hours(
             "net_hours": 0.0,
             "regular_hours": 0.0,
             "overtime_hours": 0.0,
-            "flagged": True,
-            "flag_reason": f"Corrupted sequence: check_out ({out_dt.strftime('%H:%M')}) is earlier than check_in ({in_dt.strftime('%H:%M')})"
+            "flagged": False,
+            "flag_reason": None
         }
 
     # Gross duration in hours
@@ -323,8 +323,8 @@ def calculate_shift_hours(
     else:
         daily_status = "on_time"
 
-    flagged = in_eval["flagged"] or out_eval["flagged"]
-    flag_reasons = [r for r in [in_eval.get("flag_reason"), out_eval.get("flag_reason")] if r]
+    flagged = False
+    flag_reasons = []
 
     return {
         "status": daily_status,
@@ -394,10 +394,16 @@ def resolve_site_tz(tz_input) -> datetime.tzinfo:
     if isinstance(tz_input, datetime.tzinfo):
         return tz_input
     if isinstance(tz_input, str):
+        if tz_input.upper() in ("UTC", "GMT"):
+            return datetime.timezone.utc
         try:
             return zoneinfo.ZoneInfo(tz_input)
         except Exception:
-            return get_app_timezone()
+            try:
+                import pytz
+                return pytz.timezone(tz_input)
+            except Exception:
+                return get_app_timezone()
     return get_app_timezone()
 
 def validate_flexible_shift_policy(policy: Dict[str, Any]) -> Tuple[bool, Optional[str]]:

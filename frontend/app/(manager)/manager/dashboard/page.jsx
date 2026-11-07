@@ -254,14 +254,6 @@ function DashboardContent() {
                       </td>
                       <td>
                         <span>{tm.site}</span>
-                        {!tm.within_geofence && (
-                          <span
-                            className="badge bg-danger-subtle text-danger ms-1"
-                            style={{ fontSize: '0.68rem' }}
-                          >
-                            Outside Geofence
-                          </span>
-                        )}
                       </td>
                       <td>
                         {tm.check_in_time && tm.check_in_time !== '—' ? (

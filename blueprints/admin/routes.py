@@ -388,8 +388,8 @@ def dashboard_summary():
         """, (d["id"],))
         dept_core_missed.append(c.fetchone()[0] or 0)
 
-    # 3. Geofence Violations over time
-    c.execute("SELECT COUNT(*) FROM attendance_events WHERE within_geofence = 0 OR flag_reason LIKE '%Geofence violation%'")
+    # 3. Location mismatch flags over time
+    c.execute("SELECT COUNT(*) FROM attendance_events WHERE flagged = 1")
     total_geofence_violations = c.fetchone()[0] or 0
 
     c.execute("SELECT COUNT(id) FROM employees WHERE active = 1")
@@ -1459,6 +1459,7 @@ def attendance_records():
         SELECT a.id, a.employee_id, a.event_type, a.timestamp, a.latitude, a.longitude,
                a.address, a.distance_from_site_meters, a.within_geofence, a.status,
                a.flagged, a.flag_reason, a.geotagged_photo_path, a.attendance_method,
+               a.checkin_checkout_distance_meters,
                e.name, e.employee_code, d.name AS department_name, s.name AS site_name,
                sh.name AS shift_name
         FROM attendance_events a
@@ -1503,6 +1504,7 @@ def attendance_records():
             SELECT a.id, a.student_id AS employee_id, a.event_type, a.timestamp, a.latitude, a.longitude,
                    a.address, a.distance_from_site_meters, a.within_geofence, a.status,
                    a.flagged, a.flag_reason, a.geotagged_photo_path, a.attendance_method,
+                   a.checkin_checkout_distance_meters,
                    s.name, s.roll AS employee_code, s.class AS department_name, 'Headquarters' AS site_name, 'General Shift' AS shift_name
             FROM attendance a
             LEFT JOIN students s ON a.student_id = s.id
@@ -1578,13 +1580,13 @@ def flagged_queue():
         SELECT a.id, a.employee_id, a.event_type, a.timestamp, a.latitude, a.longitude,
                a.address, a.distance_from_site_meters, a.within_geofence, a.confidence,
                a.status, a.flagged, a.flag_reason, a.geotagged_photo_path, a.review_note,
-               a.attendance_method,
+               a.attendance_method, a.checkin_checkout_distance_meters,
                e.name, e.employee_code, d.name AS department_name, s.name AS site_name
         FROM attendance_events a
         JOIN employees e ON a.employee_id = e.id
         LEFT JOIN departments d ON e.department_id = d.id
         LEFT JOIN sites s ON a.site_id = s.id
-        WHERE a.flagged = 1 OR a.status = 'flagged' OR a.within_geofence = 0
+        WHERE a.flagged = 1 OR a.status = 'flagged'
         ORDER BY a.timestamp DESC
     """)
     flagged_events = [dict(r) for r in c.fetchall()]
@@ -1594,7 +1596,7 @@ def flagged_queue():
             SELECT a.id, a.student_id AS employee_id, a.event_type, a.timestamp, a.latitude, a.longitude,
                    a.address, a.distance_from_site_meters, a.within_geofence, a.confidence,
                    a.status, a.flagged, a.flag_reason, a.geotagged_photo_path, a.review_note,
-                   a.attendance_method,
+                   a.attendance_method, a.checkin_checkout_distance_meters,
                    s.name, s.roll AS employee_code, s.class AS department_name, 'Headquarters' AS site_name
             FROM attendance a
             LEFT JOIN students s ON a.student_id = s.id
@@ -2005,32 +2007,52 @@ def audit_logs():
 def settings():
     admin_id = session.get("admin_id")
     if request.method == "POST":
-        match_th = request.form.get("match_threshold", "0.48")
-        review_th = request.form.get("review_threshold", "0.44")
-        cooldown = request.form.get("duplicate_cooldown_seconds", "300")
-        geocoding_prov = request.form.get("geocoding_provider", "nominatim")
+        data = request.form if request.form else (request.get_json(silent=True) or {})
+        match_th = data.get("match_threshold", "0.48")
+        review_th = data.get("review_threshold", "0.44")
+        cooldown = data.get("duplicate_cooldown_seconds", "300")
+        geocoding_prov = data.get("geocoding_provider", "nominatim")
+        loc_radius_str = data.get("location_match_radius_meters")
 
-        set_setting("match_threshold", match_th)
-        set_setting("review_threshold", review_th)
-        set_setting("duplicate_cooldown_seconds", cooldown)
-        set_setting("geocoding_provider", geocoding_prov)
+        set_setting("match_threshold", str(match_th))
+        set_setting("review_threshold", str(review_th))
+        set_setting("duplicate_cooldown_seconds", str(cooldown))
+        set_setting("geocoding_provider", str(geocoding_prov))
+
+        if loc_radius_str is not None:
+            try:
+                loc_radius_val = float(loc_radius_str)
+                if loc_radius_val >= 10.0:
+                    old_radius = get_setting("location_match_radius_meters", str(Config.LOCATION_MATCH_RADIUS_METERS))
+                    set_setting("location_match_radius_meters", str(round(loc_radius_val, 1)))
+                    log_audit(
+                        admin_id,
+                        "admin",
+                        "UPDATE_SETTING",
+                        "settings",
+                        "location_match_radius_meters",
+                        f"Changed location match radius from {old_radius}m to {loc_radius_val}m"
+                    )
+            except (ValueError, TypeError):
+                pass
 
         # Handle Attendance Method Policy form data if submitted
-        global_pol = request.form.get("global_attendance_policy")
+        global_pol = data.get("global_attendance_policy")
         if global_pol in VALID_ATTENDANCE_POLICIES:
             site_overrides = {}
-            for k, v in request.form.items():
+            for k, v in data.items():
                 if k.startswith("site_policy_"):
                     s_id = k.replace("site_policy_", "")
                     site_overrides[s_id] = v
             update_attendance_policies(global_pol, site_overrides, actor_id=admin_id, actor_role="admin")
 
-        flash("Recognition engine settings and attendance method policies updated successfully.", "success")
+        flash("Recognition engine settings and location match policies updated successfully.", "success")
 
     match_th = get_setting("match_threshold", str(Config.MATCH_THRESHOLD))
     review_th = get_setting("review_threshold", str(Config.REVIEW_THRESHOLD))
     cooldown = get_setting("duplicate_cooldown_seconds", str(Config.DUPLICATE_COOLDOWN_SECONDS))
     geocoding_prov = get_setting("geocoding_provider", Config.GEOCODING_PROVIDER)
+    loc_radius = get_setting("location_match_radius_meters", str(Config.LOCATION_MATCH_RADIUS_METERS))
     global_attendance_policy = get_setting("global_attendance_policy", "both")
     sites_policies = get_all_sites_attendance_policies()
 
@@ -2040,6 +2062,7 @@ def settings():
         review_threshold=review_th,
         cooldown=cooldown,
         geocoding_provider=geocoding_prov,
+        location_match_radius_meters=loc_radius,
         global_attendance_policy=global_attendance_policy,
         sites_policies=sites_policies
     )

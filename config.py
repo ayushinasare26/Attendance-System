@@ -138,6 +138,9 @@ class Config:
     REVIEW_THRESHOLD = float(os.environ.get("REVIEW_THRESHOLD", 0.44))
     DUPLICATE_COOLDOWN_SECONDS = int(os.environ.get("DUPLICATE_COOLDOWN_SECONDS", 300))
     
+    # Location Verification (Check-In vs Check-Out Match Radius)
+    LOCATION_MATCH_RADIUS_METERS = float(os.environ.get("LOCATION_MATCH_RADIUS_METERS", 200.0))
+
     # Geocoding & Geolocation
     GPS_ACCURACY_THRESHOLD_METERS = float(os.environ.get("GPS_ACCURACY_THRESHOLD_METERS", 100.0))
     GEOCODING_PROVIDER = os.environ.get("GEOCODING_PROVIDER", "nominatim")

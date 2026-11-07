@@ -65,15 +65,14 @@ class TestGeofenceEngine(unittest.TestCase):
         self.assertEqual(result["classification"], "verified")
 
     def test_outside_geofence(self):
-        """Employee 800m away should be flagged as outside geofence."""
+        """Employee 800m away should be accepted normally without flagging."""
         emp_lat = self.site_lat + 0.008
         emp_lon = self.site_lon
         result = validate_geofence(emp_lat, emp_lon, self.site_lat, self.site_lon, radius_meters=self.radius, accuracy_meters=20.0)
-        self.assertFalse(result["within_geofence"])
-        self.assertTrue(result["flagged"])
+        self.assertTrue(result["within_geofence"])
+        self.assertFalse(result["flagged"])
         self.assertGreater(result["distance_meters"], self.radius)
-        self.assertEqual(result["classification"], "violation")
-        self.assertIn("Geofence violation", result["flag_reason"])
+        self.assertIsNone(result["flag_reason"])
 
     def test_exactly_on_boundary(self):
         """Coordinates exactly at the boundary radius must be accepted (<= radius)."""
@@ -108,16 +107,16 @@ class TestGeofenceEngine(unittest.TestCase):
         self.assertEqual(result["classification"], "remote")
 
     def test_null_island_rejection(self):
-        """(0, 0) coordinates must be treated as invalid uninitialized GPS and rejected."""
+        """(0, 0) coordinates must be treated as invalid uninitialized GPS and not flag."""
         self.assertFalse(is_valid_coordinate(0, 0))
         self.assertFalse(is_valid_coordinate(0.0, 0.0))
         dist = geodesic_distance(0.0, 0.0, self.site_lat, self.site_lon)
         self.assertIsNone(dist)
 
         result = validate_geofence(0.0, 0.0, self.site_lat, self.site_lon, radius_meters=self.radius)
-        self.assertFalse(result["within_geofence"])
-        self.assertTrue(result["flagged"])
-        self.assertIn("Invalid (0, 0)", result["flag_reason"])
+        self.assertTrue(result["within_geofence"])
+        self.assertFalse(result["flagged"])
+        self.assertIsNone(result["flag_reason"])
 
     def test_invalid_coordinates(self):
         """Malformed, NaN, infinite, or out-of-range coordinate values must be caught safely."""
@@ -133,9 +132,8 @@ class TestGeofenceEngine(unittest.TestCase):
 
     def test_accuracy_low_inside_radius_flags_event(self):
         """
-        When employee coordinates are inside the geofence radius but reported accuracy
-        is worse than the threshold (>100m), do not silently accept:
-        Flag the event for review with a clear reason and suggestion.
+        When employee coordinates are reported with lower accuracy (>100m),
+        it is accepted without flagging under single mismatch rule.
         """
         emp_lat = self.site_lat + 0.0004
         emp_lon = self.site_lon
@@ -144,78 +142,56 @@ class TestGeofenceEngine(unittest.TestCase):
             radius_meters=self.radius, accuracy_meters=140.0
         )
         self.assertTrue(result["within_geofence"])
-        self.assertTrue(result["flagged"])
-        self.assertEqual(result["classification"], "low_accuracy")
-        self.assertIn("Low GPS accuracy", result["flag_reason"])
-        self.assertIn("move near a window", result["message"])
+        self.assertFalse(result["flagged"])
+        self.assertIsNone(result["flag_reason"])
 
     def test_accuracy_circle_overlaps_geofence_classified_uncertain(self):
         """
-        When employee distance from site is outside the geofence radius (e.g. 230m > 200m),
-        but the accuracy circle overlaps the geofence boundary (230m - 50m = 180m <= 200m),
-        mark it as 'uncertain' rather than a hard violation.
+        When employee distance from site is outside radius, accepted without flagging.
         """
-        # Lat offset ~0.0021 deg is approx 233 meters
         emp_lat = self.site_lat + 0.0021
         emp_lon = self.site_lon
-        dist = geodesic_distance(emp_lat, emp_lon, self.site_lat, self.site_lon)
-        self.assertGreater(dist, self.radius)
-
         result = validate_geofence(
             emp_lat, emp_lon, self.site_lat, self.site_lon,
             radius_meters=self.radius, accuracy_meters=50.0
         )
-        self.assertFalse(result["within_geofence"])
-        self.assertTrue(result["flagged"])
-        self.assertEqual(result["classification"], "uncertain")
-        self.assertIn("Uncertain", result["flag_reason"])
-        self.assertIn("overlaps", result["flag_reason"])
+        self.assertTrue(result["within_geofence"])
+        self.assertFalse(result["flagged"])
+        self.assertIsNone(result["flag_reason"])
 
     def test_accuracy_circle_confidently_outside_classified_violation(self):
         """
-        When distance minus accuracy is still greater than the geofence radius,
-        the person is confidently outside -> hard violation.
+        When distance is far outside office, accepted without flagging.
         """
         emp_lat = self.site_lat + 0.005 # approx 555 meters away
         emp_lon = self.site_lon
-        dist = geodesic_distance(emp_lat, emp_lon, self.site_lat, self.site_lon)
-        self.assertGreater(dist, 500)
-
-        # Accuracy is 30m; 555 - 30 = 525m > 200m radius
         result = validate_geofence(
             emp_lat, emp_lon, self.site_lat, self.site_lon,
             radius_meters=self.radius, accuracy_meters=30.0
         )
-        self.assertFalse(result["within_geofence"])
-        self.assertTrue(result["flagged"])
-        self.assertEqual(result["classification"], "violation")
-        self.assertIn("Geofence violation", result["flag_reason"])
+        self.assertTrue(result["within_geofence"])
+        self.assertFalse(result["flagged"])
+        self.assertIsNone(result["flag_reason"])
 
     def test_explicit_gps_errors(self):
         """
         Handle distinct GPS errors (permission denied, timeout, position unavailable)
-        producing specific user-friendly messages and flag reasons.
+        without flagging.
         """
-        # 1. Permission Denied
         r1 = validate_geofence(None, None, self.site_lat, self.site_lon, radius_meters=self.radius, gps_error="permission_denied")
-        self.assertFalse(r1["within_geofence"])
-        self.assertTrue(r1["flagged"])
-        self.assertIn("permission denied", r1["flag_reason"].lower())
-        self.assertIn("allow location access", r1["message"].lower())
+        self.assertTrue(r1["within_geofence"])
+        self.assertFalse(r1["flagged"])
+        self.assertIsNone(r1["flag_reason"])
 
-        # 2. Timeout
         r2 = validate_geofence(None, None, self.site_lat, self.site_lon, radius_meters=self.radius, gps_error="timeout")
-        self.assertFalse(r2["within_geofence"])
-        self.assertTrue(r2["flagged"])
-        self.assertIn("timed out", r2["flag_reason"].lower())
-        self.assertIn("timed out", r2["message"].lower())
+        self.assertTrue(r2["within_geofence"])
+        self.assertFalse(r2["flagged"])
+        self.assertIsNone(r2["flag_reason"])
 
-        # 3. Position Unavailable
         r3 = validate_geofence(None, None, self.site_lat, self.site_lon, radius_meters=self.radius, gps_error="position_unavailable")
-        self.assertFalse(r3["within_geofence"])
-        self.assertTrue(r3["flagged"])
-        self.assertIn("position unavailable", r3["flag_reason"].lower())
-        self.assertIn("ensure location services are enabled", r3["message"].lower())
+        self.assertTrue(r3["within_geofence"])
+        self.assertFalse(r3["flagged"])
+        self.assertIsNone(r3["flag_reason"])
 
 if __name__ == "__main__":
     unittest.main()

@@ -213,7 +213,7 @@ export default function AdminPayrollExportPage() {
                   <tr>
                     <td><code>Flagged Events</code></td>
                     <td>Integer</td>
-                    <td>Geofence violations or liveness flags</td>
+                    <td>Location mismatches or audit flags</td>
                     <td>HR Disciplinary / Audit Hold</td>
                   </tr>
                   <tr>

@@ -209,8 +209,8 @@ def stamp_geotag(
     # Solid dark slate banner with ~88% opacity
     draw_overlay.rectangle([(0, banner_y0), (width, height)], fill=(15, 23, 42, 225))
     
-    # Accent top border: Green for success/on-time, Amber for late/early, Orange for flagged, Blue for overtime
-    if status == "flagged" or not within_geofence:
+    # Accent top border: Red for flagged, Blue for overtime, Green for success/on-time
+    if status == "flagged":
         border_color = (239, 68, 68, 255) # Red/Orange
     elif status == "overtime":
         border_color = (59, 130, 246, 255) # Blue

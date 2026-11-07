@@ -284,7 +284,7 @@ class TestManualAttendance(unittest.TestCase):
         self.assertEqual(latest_event["employee_id"], self.test_emp_id)
 
     def test_09_geofence_validation_manual_attendance(self):
-        """Test 9: Employee outside the configured site geofence has attendance recorded with flagged status."""
+        """Test 9: Employee outside the configured site geofence has attendance recorded normally without flag."""
         self._login_employee()
         # Coordinates in Delhi (~1100km away from Mumbai site)
         resp = self.client.post("/employee/manual-check-in", json={
@@ -295,9 +295,9 @@ class TestManualAttendance(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertTrue(data.get("success"))
-        self.assertTrue(data.get("flagged"))
-        self.assertFalse(data.get("within_geofence"))
-        self.assertIn("geofence", data.get("flag_reason", "").lower())
+        self.assertFalse(data.get("flagged"))
+        self.assertTrue(data.get("within_geofence"))
+        self.assertIsNone(data.get("flag_reason"))
 
         conn = get_db_connection()
         row = conn.execute(
@@ -307,8 +307,9 @@ class TestManualAttendance(unittest.TestCase):
         conn.close()
         self.assertIsNotNone(row)
         self.assertEqual(row["attendance_method"], "manual")
-        self.assertEqual(row["within_geofence"], 0)
-        self.assertEqual(row["flagged"], 1)
+        self.assertEqual(row["within_geofence"], 1)
+        self.assertEqual(row["flagged"], 0)
+        self.assertIsNone(row["flag_reason"])
 
     def test_10_unauthenticated_manual_attendance_rejected(self):
         """Test 10: Manual attendance request without session authentication is rejected with 401 or redirect."""

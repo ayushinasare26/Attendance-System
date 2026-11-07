@@ -24,6 +24,7 @@ export default function AdminSettingsPage() {
   const [reviewThreshold, setReviewThreshold] = useState('0.44');
   const [cooldown, setCooldown] = useState('300');
   const [geocodingProvider, setGeocodingProvider] = useState('nominatim');
+  const [locationMatchRadius, setLocationMatchRadius] = useState('200');
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-settings'],
@@ -42,6 +43,7 @@ export default function AdminSettingsPage() {
       if (data.review_threshold !== undefined) setReviewThreshold(String(data.review_threshold));
       if (data.cooldown !== undefined) setCooldown(String(data.cooldown));
       if (data.geocoding_provider) setGeocodingProvider(data.geocoding_provider);
+      if (data.location_match_radius_meters !== undefined) setLocationMatchRadius(String(data.location_match_radius_meters));
 
       if (data.sites_policies) {
         const overrides = {};
@@ -108,6 +110,7 @@ export default function AdminSettingsPage() {
       review_threshold: reviewThreshold,
       duplicate_cooldown_seconds: cooldown,
       geocoding_provider: geocodingProvider,
+      location_match_radius_meters: locationMatchRadius,
     });
   };
 
@@ -562,6 +565,26 @@ export default function AdminSettingsPage() {
                   </select>
                   <span className="text-muted" style={{ fontSize: '0.75rem' }}>
                     Reverse geocoder for GPS watermark resolution.
+                  </span>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label small fw-semibold text-secondary">
+                    Check-in vs Check-out Match Radius (Meters)
+                  </label>
+                  <input
+                    type="number"
+                    min="10"
+                    max="10000"
+                    step="1"
+                    name="location_match_radius_meters"
+                    className="form-control rounded-3"
+                    value={locationMatchRadius}
+                    onChange={(e) => setLocationMatchRadius(e.target.value)}
+                    required
+                  />
+                  <span className="text-muted" style={{ fontSize: '0.75rem' }}>
+                    Default: 200m. Check-out beyond this distance from session check-in is flagged.
                   </span>
                 </div>
               </div>

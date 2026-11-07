@@ -71,7 +71,7 @@ class TestServerlessResilience(unittest.TestCase):
         self.assertTrue(result.get("success"), f"Pipeline failed: {result.get('message')}")
         self.assertEqual(result.get("student_id"), 24)
         self.assertEqual(result.get("student_name"), "Ayushi Nasare")
-        self.assertEqual(len(result.get("stages", [])), 9)
+        self.assertEqual(len(result.get("stages", [])), 10)
 
 if __name__ == "__main__":
     unittest.main()

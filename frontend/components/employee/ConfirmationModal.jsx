@@ -20,9 +20,7 @@ export default function ConfirmationModal({ show, modalData, onHide, onRefresh }
 
   const status = modalData.status || 'on_time';
   let badgeClass = 'badge bg-primary-subtle text-primary px-3 py-1 rounded-pill';
-  if (status === 'flagged') {
-    badgeClass = 'badge bg-danger-subtle text-danger px-3 py-1 rounded-pill';
-  } else if (status === 'late') {
+  if (status === 'late') {
     badgeClass = 'badge bg-warning-subtle text-warning px-3 py-1 rounded-pill';
   }
 
@@ -141,18 +139,6 @@ export default function ConfirmationModal({ show, modalData, onHide, onRefresh }
                   <strong id="confirmDistance">{distanceText}</strong>
                 </div>
               </div>
-
-              {modalData.flagged ? (
-                <div
-                  id="confirmFlagNotice"
-                  className="alert alert-warning border-0 rounded-3 mt-3 py-2 px-3 small d-flex align-items-center gap-2"
-                >
-                  <i className="bi bi-info-circle-fill text-warning"></i>
-                  <span id="confirmFlagReason">
-                    {modalData.flag_reason || 'Event flagged for manager review.'}
-                  </span>
-                </div>
-              ) : null}
             </div>
             <div className="modal-footer border-0 pt-0">
               <button

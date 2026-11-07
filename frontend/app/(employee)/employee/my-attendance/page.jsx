@@ -223,22 +223,6 @@ export default function MyAttendancePage() {
                 </div>
               </div>
             </div>
-            <div className="col-6 col-md">
-              <div className="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
-                <div className="text-muted small fw-semibold">Flagged for Audit</div>
-                <div
-                  className={`h3 fw-bold ${
-                    data?.total_flagged_days > 0 ? 'text-danger' : 'text-muted'
-                  } my-1`}
-                >
-                  {data?.total_flagged_days}
-                </div>
-                <div className={`${data?.total_flagged_days > 0 ? 'text-danger' : 'text-muted'} small`}>
-                  <i className="bi bi-flag-fill me-1"></i>
-                  {data?.total_flagged_days > 0 ? 'Geofence / Audit review' : 'No audit flags'}
-                </div>
-              </div>
-            </div>
           </>
         )}
       </div>
@@ -325,7 +309,6 @@ export default function MyAttendancePage() {
                   <option value="early_leave">Early Leave</option>
                 </>
               )}
-              <option value="flagged">Flagged for Audit</option>
             </select>
           </div>
           <div className="col-md-3 d-flex align-items-end gap-2 pt-md-4">
@@ -365,7 +348,6 @@ export default function MyAttendancePage() {
                   <th>Short Hours</th>
                   <th>Overtime</th>
                   <th>Status</th>
-                  <th>Flags & Audit</th>
                 </tr>
               ) : (
                 <tr>
@@ -377,7 +359,6 @@ export default function MyAttendancePage() {
                   <th>Overtime</th>
                   <th>Total Net</th>
                   <th>Punctuality Status</th>
-                  <th>Audit & Notes</th>
                 </tr>
               )}
             </thead>
@@ -528,23 +509,6 @@ export default function MyAttendancePage() {
                             </span>
                           )}
                         </td>
-                        <td>
-                          {r.flagged ? (
-                            <>
-                              <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-1">
-                                <i className="bi bi-exclamation-triangle-fill text-warning me-1"></i>Audit Review
-                              </span>
-                              <div className="text-danger small mt-1" style={{ fontSize: '0.76rem' }} title={r.flag_reason}>
-                                <i className="bi bi-flag-fill me-1"></i>
-                                {r.flag_reason && r.flag_reason.length > 45 ? `${r.flag_reason.substring(0, 45)}...` : r.flag_reason}
-                              </div>
-                            </>
-                          ) : (
-                            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
-                              <i className="bi bi-shield-check me-1"></i>Verified
-                            </span>
-                          )}
-                        </td>
                       </>
                     ) : (
                       <>
@@ -601,30 +565,13 @@ export default function MyAttendancePage() {
                             </span>
                           )}
                         </td>
-                        <td>
-                          {r.flagged ? (
-                            <>
-                              <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-1">
-                                <i className="bi bi-exclamation-triangle-fill text-warning me-1"></i>Audit Review
-                              </span>
-                              <div className="text-danger small mt-1" style={{ fontSize: '0.76rem' }} title={r.flag_reason}>
-                                <i className="bi bi-flag-fill me-1"></i>
-                                {r.flag_reason && r.flag_reason.length > 45 ? `${r.flag_reason.substring(0, 45)}...` : r.flag_reason}
-                              </div>
-                            </>
-                          ) : (
-                            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
-                              <i className="bi bi-shield-check me-1"></i>Verified
-                            </span>
-                          )}
-                        </td>
                       </>
                     )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={isFlexible ? 10 : 9} className="text-center py-4 text-muted">
+                  <td colSpan={isFlexible ? 9 : 8} className="text-center py-4 text-muted">
                     No attendance records found for this criteria.
                   </td>
                 </tr>

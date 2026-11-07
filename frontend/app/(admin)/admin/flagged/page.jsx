@@ -159,11 +159,16 @@ export default function AdminFlaggedQueuePage() {
                       <span className="text-dark small">{r.time_display}</span>
                     </td>
                     <td>
-                      <div>{r.site_name || 'Headquarters'}</div>
-                      {r.distance_from_site_meters != null ? (
+                      <div>{r.site_name || 'Work Site'}</div>
+                      {r.checkin_checkout_distance_meters != null ? (
                         <span className="text-danger small fw-semibold">
+                          <i className="bi bi-arrows-expand me-1"></i>
+                          Diff: {Math.round(r.checkin_checkout_distance_meters)}m from check-in
+                        </span>
+                      ) : r.distance_from_site_meters != null ? (
+                        <span className="text-secondary small">
                           <i className="bi bi-compass me-1"></i>
-                          {Math.round(r.distance_from_site_meters)}m away
+                          {Math.round(r.distance_from_site_meters)}m from site
                         </span>
                       ) : (
                         <span className="text-muted small">No GPS</span>
@@ -172,7 +177,7 @@ export default function AdminFlaggedQueuePage() {
                     <td>
                       <span className="text-danger small fw-semibold">
                         <i className="bi bi-exclamation-triangle-fill me-1"></i>
-                        {r.flag_reason || r.review_note || 'Geofence violation or missing coordinates'}
+                        {r.flag_reason || r.review_note || 'Location mismatch'}
                       </span>
                     </td>
                     <td className="text-end pe-4">

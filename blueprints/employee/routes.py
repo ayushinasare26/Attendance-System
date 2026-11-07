@@ -17,7 +17,7 @@ from flask import (
 from . import employee_bp
 from core.db import (
     get_db_connection, log_audit, get_effective_attendance_policy,
-    resolve_employee_shift, get_site_timezone_str
+    resolve_employee_shift, get_site_timezone_str, get_setting
 )
 from core.auth import (
     login_required_employee,
@@ -25,7 +25,7 @@ from core.auth import (
     rate_limit
 )
 from core.pipeline import run_attendance_pipeline, get_employee_site_and_shift, check_duplicate_event
-from core.geofence import validate_geofence
+from core.geofence import validate_geofence, is_valid_coordinate, geodesic_distance
 from core.geotag import reverse_geocode
 from core.shift_engine import (
     calculate_shift_hours, evaluate_check_in, evaluate_check_out,
@@ -621,19 +621,17 @@ def _process_manual_attendance(event_type="check_in"):
         gps_error=gps_error
     )
 
-    within_geofence = geofence_res["within_geofence"]
+    within_geofence = True
     dist_meters = geofence_res["distance_meters"]
-    is_flagged = geofence_res["flagged"]
-    flag_reason = geofence_res["flag_reason"]
+    is_flagged = False
+    flag_reason = None
+    mismatch_distance = None
 
     # Reverse geocode address if coordinates are provided
     if lat_val is not None and lon_val is not None:
         resolved_address = reverse_geocode(lat_val, lon_val)
     else:
         resolved_address = "Location Permission Denied"
-        if assigned_site.get("geofencing_enabled", 0):
-            is_flagged = True
-            flag_reason = geofence_res.get("flag_reason") or f"Missing GPS coordinates for geofenced site ({assigned_site['name']})"
 
     # 5. Shift and Punctuality Rules
     local_now = get_local_now()
@@ -652,13 +650,6 @@ def _process_manual_attendance(event_type="check_in"):
 
         if event_type == "check_in":
             event_status = "on_time"
-            allow_s_str = assigned_shift.get("allowed_window_start")
-            if allow_s_str:
-                allow_s = parse_time_str(allow_s_str)
-                if now_dt.time() < allow_s:
-                    flag_reason = (flag_reason + "; " if flag_reason else "") + f"Check-in earlier than allowed window ({allow_s_str})"
-            if is_flagged and assigned_site.get("geofencing_enabled", 0):
-                event_status = "flagged"
         else:
             conn = get_db_connection()
             c = conn.cursor()
@@ -673,7 +664,7 @@ def _process_manual_attendance(event_type="check_in"):
             current_ev = {
                 "event_type": "check_out",
                 "timestamp": local_now.isoformat(),
-                "flagged": is_flagged
+                "flagged": False
             }
             all_eval_events = prior_events + [current_ev]
             flex_res = compute_flexible_day(
@@ -686,21 +677,9 @@ def _process_manual_attendance(event_type="check_in"):
             event_status = flex_res["status"].lower().replace(" ", "_")
             hours_worked = flex_res["worked_hours"]
             overtime_hours = flex_res["overtime_hours"]
-
-            if "core_missed" in flex_res["secondary_flags"]:
-                flag_reason = (flag_reason + "; " if flag_reason else "") + "Core Hours Missed"
-            if "outside_allowed_window" in flex_res["secondary_flags"]:
-                flag_reason = (flag_reason + "; " if flag_reason else "") + "Event outside permitted window"
-
-            if is_flagged and assigned_site.get("geofencing_enabled", 0):
-                event_status = "flagged"
     elif event_type == "check_in":
         shift_eval = evaluate_check_in(now_dt, assigned_shift)
         event_status = shift_eval["status"]
-        if event_status == "late" and not flag_reason:
-            flag_reason = shift_eval.get("flag_reason")
-        if is_flagged and assigned_site.get("geofencing_enabled", 0):
-            event_status = "flagged"
     else:
         events_today = get_employee_today_events(session_emp_id)
         check_ins_today = [ev for ev in events_today if ev["event_type"] == "check_in"]
@@ -711,8 +690,43 @@ def _process_manual_attendance(event_type="check_in"):
         hours_worked = hours_calc.get("regular_hours", 0.0)
         overtime_hours = hours_calc.get("overtime_hours", 0.0)
 
-        if is_flagged and assigned_site.get("geofencing_enabled", 0):
-            event_status = "flagged"
+    # ---------------- Location Mismatch Verification (Manual) ----------------
+    # ONLY Flag Rule: Check-In vs Check-Out location consistency
+    if event_type == "check_out":
+        conn_m = get_db_connection()
+        c_m = conn_m.cursor()
+        c_m.execute("""
+            SELECT id, event_type, timestamp, latitude, longitude
+            FROM attendance_events
+            WHERE employee_id = ?
+            ORDER BY timestamp ASC
+        """, (session_emp_id,))
+        emp_events = [dict(r) for r in c_m.fetchall()]
+        conn_m.close()
+
+        unpaired_checkins = []
+        for ev in emp_events:
+            if ev["event_type"] == "check_in":
+                unpaired_checkins.append(ev)
+            elif ev["event_type"] == "check_out" and unpaired_checkins:
+                unpaired_checkins.pop()
+
+        matched_checkin = unpaired_checkins[-1] if unpaired_checkins else None
+        if matched_checkin:
+            in_lat = matched_checkin.get("latitude")
+            in_lon = matched_checkin.get("longitude")
+            if is_valid_coordinate(in_lat, in_lon) and is_valid_coordinate(lat_val, lon_val):
+                dist_diff = geodesic_distance(in_lat, in_lon, lat_val, lon_val)
+                if dist_diff is not None:
+                    mismatch_distance = round(dist_diff, 1)
+                    try:
+                        match_radius = float(get_setting("location_match_radius_meters", str(Config.LOCATION_MATCH_RADIUS_METERS)) or 200.0)
+                    except Exception:
+                        match_radius = float(Config.LOCATION_MATCH_RADIUS_METERS)
+                    if dist_diff > match_radius:
+                        is_flagged = True
+                        flag_reason = f"Check-out location differs from check-in by {int(dist_diff):,} m (allowed {int(match_radius):,} m)"
+                        event_status = "flagged"
 
     # 6. Record in Database (confidence, liveness, photo_path are NULL for manual)
     conn = get_db_connection()
@@ -723,8 +737,9 @@ def _process_manual_attendance(event_type="check_in"):
                 employee_id, event_type, timestamp, latitude, longitude,
                 address, site_id, distance_from_site_meters, within_geofence,
                 confidence, liveness_passed, geotagged_photo_path,
-                status, flagged, flag_reason, attendance_method, accuracy_meters, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                status, flagged, flag_reason, attendance_method, accuracy_meters, created_at,
+                checkin_checkout_distance_meters
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             session_emp_id,
             event_type,
@@ -743,7 +758,8 @@ def _process_manual_attendance(event_type="check_in"):
             flag_reason,
             "manual",
             acc_val,
-            iso_timestamp
+            iso_timestamp,
+            mismatch_distance
         ))
         event_id = c.lastrowid
 
@@ -753,8 +769,9 @@ def _process_manual_attendance(event_type="check_in"):
                 student_id, name, timestamp, latitude, longitude,
                 address, confidence, liveness_passed, geotagged_photo_path,
                 status, event_type, site_id, distance_from_site_meters,
-                within_geofence, flagged, flag_reason, attendance_method, accuracy_meters
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                within_geofence, flagged, flag_reason, attendance_method, accuracy_meters,
+                checkin_checkout_distance_meters
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             session_emp_id,
             emp_name,
@@ -773,7 +790,8 @@ def _process_manual_attendance(event_type="check_in"):
             1 if is_flagged else 0,
             flag_reason,
             "manual",
-            acc_val
+            acc_val,
+            mismatch_distance
         ))
         conn.commit()
 
@@ -1139,10 +1157,8 @@ def my_attendance():
         if is_present:
             total_present_days += 1
 
-        is_flagged = any(ev.get("flagged") for ev in (check_ins + check_outs))
-        flag_reason = "; ".join([ev["flag_reason"] for ev in (check_ins + check_outs) if ev.get("flag_reason")])
-        if is_flagged:
-            total_flagged_days += 1
+        is_flagged = False
+        flag_reason = "—"
 
         if is_flexible:
             sum_data = get_or_compute_daily_summary(emp_id, day_str, conn=conn, force_recompute=(day_str == local_today_str))

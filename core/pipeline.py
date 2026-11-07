@@ -14,7 +14,7 @@ from core.face_engine import (
 )
 from core.liveness import verify_liveness
 from core.geotag import reverse_geocode, stamp_geotag
-from core.geofence import validate_geofence
+from core.geofence import validate_geofence, is_valid_coordinate, geodesic_distance
 from core.shift_engine import (
     evaluate_check_in,
     evaluate_check_out,
@@ -356,32 +356,18 @@ def run_attendance_pipeline(
         gps_error=gps_error
     )
 
-    within_geofence = geofence_res["within_geofence"]
+    within_geofence = True
     dist_meters = geofence_res["distance_meters"]
-    is_flagged = geofence_res["flagged"]
-    flag_reason = geofence_res["flag_reason"]
-    classification = geofence_res.get("classification", "unknown")
+    is_flagged = False
+    flag_reason = None
+    mismatch_distance = None
 
     # Privacy compliance: Do not log full coordinates alongside employee identity in plain application logs
     acc_log_str = f" (accuracy ±{round(acc_val)}m)" if acc_val is not None else ""
     if has_valid_coords:
-        if within_geofence and not is_flagged:
-            record_stage("Geolocation Capture", "Completed", f"GPS acquired{acc_log_str}. Geofence verified ({dist_meters}m from {assigned_site['name']}).")
-        elif within_geofence and is_flagged:
-            record_stage("Geolocation Capture", "Completed", f"GPS acquired{acc_log_str}. Low accuracy reading flagged ({dist_meters}m from {assigned_site['name']}).")
-        else:
-            record_stage("Geolocation Capture", "Completed", f"GPS acquired{acc_log_str}. Location outside geofence ({dist_meters}m from {assigned_site['name']}, status: {classification}).")
+        record_stage("Geolocation Capture", "Completed", f"GPS acquired{acc_log_str}.")
     else:
-        if assigned_site.get("geofencing_enabled", 0):
-            record_status = "flagged"
-            is_flagged = True
-            msg = geofence_res.get("message") or "GPS coordinates missing or denied by client. Flagged for audit."
-            record_stage("Geolocation Capture", "Failed", msg)
-        else:
-            within_geofence = True
-            is_flagged = False
-            flag_reason = None
-            record_stage("Geolocation Capture", "Completed", "Remote workforce policy: Location logged without radius restriction.")
+        record_stage("Geolocation Capture", "Completed", "Coordinates not provided.")
 
     # ---------------- STAGE 7: Reverse Geocoding ----------------
     resolved_address = "Location Permission Denied"
@@ -407,16 +393,7 @@ def run_attendance_pipeline(
         site_tz_name = assigned_site.get("timezone", "Asia/Kolkata")
 
         if event_type == "check_in":
-            # For flexible shifts, Late does not apply.
             event_status = "on_time"
-            # Verify allowed window if configured
-            allow_s_str = assigned_shift.get("allowed_window_start")
-            if allow_s_str:
-                allow_s = parse_time_str(allow_s_str)
-                if now_dt.time() < allow_s:
-                    flag_reason = (flag_reason + "; " if flag_reason else "") + f"Check-in earlier than allowed window ({allow_s_str})"
-            if is_flagged and assigned_site.get("geofencing_enabled", 0):
-                event_status = "flagged"
         else:
             # Check-out for flexible shift
             conn = get_db_connection()
@@ -432,7 +409,7 @@ def run_attendance_pipeline(
             current_ev = {
                 "event_type": "check_out",
                 "timestamp": local_now.isoformat(),
-                "flagged": is_flagged
+                "flagged": False
             }
             all_eval_events = prior_events + [current_ev]
             flex_res = compute_flexible_day(
@@ -445,22 +422,9 @@ def run_attendance_pipeline(
             event_status = flex_res["status"].lower().replace(" ", "_")
             hours_worked = flex_res["worked_hours"]
             overtime_hours = flex_res["overtime_hours"]
-
-            if "core_missed" in flex_res["secondary_flags"]:
-                flag_reason = (flag_reason + "; " if flag_reason else "") + "Core Hours Missed"
-            if "outside_allowed_window" in flex_res["secondary_flags"]:
-                flag_reason = (flag_reason + "; " if flag_reason else "") + "Event outside permitted window"
-
-            if is_flagged and assigned_site.get("geofencing_enabled", 0):
-                event_status = "flagged"
     elif event_type == "check_in":
         shift_eval = evaluate_check_in(now_dt, assigned_shift)
         event_status = shift_eval["status"]
-        if event_status == "late" and not flag_reason:
-            flag_reason = shift_eval.get("flag_reason")
-        # Only override event_status to flagged if face verification failed or geofencing strictly required
-        if is_flagged and assigned_site.get("geofencing_enabled", 0):
-            event_status = "flagged"
     else:
         conn = get_db_connection()
         c = conn.cursor()
@@ -480,14 +444,43 @@ def run_attendance_pipeline(
         hours_worked = hours_res.get("regular_hours", 0.0)
         overtime_hours = hours_res.get("overtime_hours", 0.0)
 
-        if is_flagged and assigned_site.get("geofencing_enabled", 0):
-            event_status = "flagged"
-        elif hours_res.get("flagged") and not assigned_site.get("geofencing_enabled", 0):
-            # Do not flag active in-progress shift or remote workers
-            pass
-        elif hours_res.get("flagged"):
-            is_flagged = True
-            flag_reason = (flag_reason + "; " if flag_reason else "") + (hours_res.get("flag_reason") or "")
+    # ---------------- Location Mismatch Verification ----------------
+    # ONLY Flag Rule: Check-In vs Check-Out location consistency
+    if event_type == "check_out":
+        conn_m = get_db_connection()
+        c_m = conn_m.cursor()
+        c_m.execute("""
+            SELECT id, event_type, timestamp, latitude, longitude
+            FROM attendance_events
+            WHERE employee_id = ?
+            ORDER BY timestamp ASC
+        """, (student_id,))
+        emp_events = [dict(r) for r in c_m.fetchall()]
+        conn_m.close()
+
+        unpaired_checkins = []
+        for ev in emp_events:
+            if ev["event_type"] == "check_in":
+                unpaired_checkins.append(ev)
+            elif ev["event_type"] == "check_out" and unpaired_checkins:
+                unpaired_checkins.pop()
+
+        matched_checkin = unpaired_checkins[-1] if unpaired_checkins else None
+        if matched_checkin:
+            in_lat = matched_checkin.get("latitude")
+            in_lon = matched_checkin.get("longitude")
+            if is_valid_coordinate(in_lat, in_lon) and is_valid_coordinate(lat_val, lon_val):
+                dist_diff = geodesic_distance(in_lat, in_lon, lat_val, lon_val)
+                if dist_diff is not None:
+                    mismatch_distance = round(dist_diff, 1)
+                    try:
+                        match_radius = float(get_setting("location_match_radius_meters", str(Config.LOCATION_MATCH_RADIUS_METERS)) or 200.0)
+                    except Exception:
+                        match_radius = float(Config.LOCATION_MATCH_RADIUS_METERS)
+                    if dist_diff > match_radius:
+                        is_flagged = True
+                        flag_reason = f"Check-out location differs from check-in by {int(dist_diff):,} m (allowed {int(match_radius):,} m)"
+                        event_status = "flagged"
 
     # ---------------- STAGE 8: Geotag Stamping ----------------
     timestamp_display = local_now.strftime("%b %d, %Y, %I:%M:%S %p")
@@ -538,8 +531,9 @@ def run_attendance_pipeline(
                 employee_id, event_type, timestamp, latitude, longitude,
                 address, site_id, distance_from_site_meters, within_geofence,
                 confidence, liveness_passed, geotagged_photo_path,
-                status, flagged, flag_reason, attendance_method, accuracy_meters, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                status, flagged, flag_reason, attendance_method, accuracy_meters, created_at,
+                checkin_checkout_distance_meters
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             student_id,
             event_type,
@@ -558,7 +552,8 @@ def run_attendance_pipeline(
             flag_reason,
             "face",
             acc_val,
-            iso_timestamp
+            iso_timestamp,
+            mismatch_distance
         ))
         event_id = c.lastrowid
 
@@ -569,8 +564,9 @@ def run_attendance_pipeline(
                 student_id, name, timestamp, latitude, longitude,
                 address, confidence, liveness_passed, geotagged_photo_path,
                 status, event_type, site_id, distance_from_site_meters,
-                within_geofence, flagged, flag_reason, attendance_method, accuracy_meters
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                within_geofence, flagged, flag_reason, attendance_method, accuracy_meters,
+                checkin_checkout_distance_meters
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             student_id,
             student_name,
@@ -589,7 +585,8 @@ def run_attendance_pipeline(
             1 if is_flagged else 0,
             flag_reason,
             "face",
-            acc_val
+            acc_val,
+            mismatch_distance
         ))
         legacy_att_id = c.lastrowid
         conn.commit()
@@ -678,6 +675,7 @@ def run_attendance_pipeline(
         "shift_name": assigned_shift["name"],
         "flagged": is_flagged,
         "flag_reason": flag_reason,
+        "checkin_checkout_distance_meters": mismatch_distance,
         "hours_worked": hours_worked,
         "overtime_hours": overtime_hours,
         "latitude": lat_val,
